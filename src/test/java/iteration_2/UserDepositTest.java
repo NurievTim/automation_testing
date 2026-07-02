@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 
 public class UserDepositTest {
     final String AUTH = "Basic dGVzdFVzZXIxOnRlc3RVc2VyMSQ=";
@@ -38,7 +39,8 @@ public class UserDepositTest {
                 .post("/accounts/deposit")
                 .then()
                 .assertThat()
-                .statusCode(HttpStatus.SC_OK);
+                .statusCode(HttpStatus.SC_OK)
+                .body("id", equalTo(requestBody.get("id")));
     }
 
     @ParameterizedTest
@@ -73,7 +75,8 @@ public class UserDepositTest {
                 .post("/accounts/deposit")
                 .then()
                 .assertThat()
-                .statusCode(HttpStatus.SC_FORBIDDEN);
+                .statusCode(HttpStatus.SC_FORBIDDEN)
+                .body(equalTo("Unauthorized access to account"));
 
     }
 }

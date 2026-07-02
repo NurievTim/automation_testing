@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 
 public class UserTransferTest {
     final String AUTH = "Basic dGVzdFVzZXIxOnRlc3RVc2VyMSQ=";
@@ -46,7 +47,9 @@ public class UserTransferTest {
                 .post("/accounts/transfer")
                 .then()
                 .assertThat()
-                .statusCode(HttpStatus.SC_OK);
+                .statusCode(HttpStatus.SC_OK)
+                .body("message", equalTo("Transfer successful"))
+                .body("amount", equalTo((float) amount));
 
         given()
                 .accept(ContentType.JSON)
@@ -95,7 +98,8 @@ public class UserTransferTest {
                 .post("/accounts/transfer")
                 .then()
                 .assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST);
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(equalTo("Invalid transfer: insufficient funds or invalid accounts"));
     }
 
     @Test
@@ -115,6 +119,7 @@ public class UserTransferTest {
                 .post("/accounts/transfer")
                 .then()
                 .assertThat()
-                .statusCode(HttpStatus.SC_OK);
+                .statusCode(HttpStatus.SC_OK)
+                .body("message", equalTo("Transfer successful"));
     }
 }
