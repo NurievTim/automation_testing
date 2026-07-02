@@ -7,7 +7,8 @@ import org.apache.http.HttpStatus;
 import static org.hamcrest.Matchers.equalTo;
 
 public class ResponseSpec {
-    private ResponseSpec() {}
+    private ResponseSpec() {
+    }
 
     private static ResponseSpecBuilder defaultResponseBuilder() {
         return new ResponseSpecBuilder();
@@ -16,6 +17,13 @@ public class ResponseSpec {
     public static ResponseSpecification requestReturnsOK() {
         return defaultResponseBuilder()
                 .expectStatusCode(HttpStatus.SC_OK).
+                build();
+    }
+
+    public static ResponseSpecification requestReturnsOK(String successKey, String successMessage) {
+        return defaultResponseBuilder()
+                .expectStatusCode(HttpStatus.SC_OK)
+                .expectBody(successKey, equalTo(successMessage)).
                 build();
     }
 
