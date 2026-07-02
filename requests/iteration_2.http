@@ -8,6 +8,16 @@ Authorization: Basic YWRtaW46YWRtaW4=
   "balance": 5000
 }
 
+### Positive test. A user can deposit 0.01 to self balance
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic YWRtaW46YWRtaW4=
+
+{
+  "id": 1,
+  "balance": 0.01
+}
+
 ### Negative test. A user cannot deposit 5001 to self balance
 POST http://localhost:4111/api/v1/accounts/deposit
 Content-Type: application/json
@@ -16,6 +26,16 @@ Authorization: Basic YWRtaW46YWRtaW4=
 {
   "id": 1,
   "balance": 5001
+}
+
+### Negative test. A user cannot deposit to non-existen account
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic YWRtaW46YWRtaW4=
+
+{
+  "id": 1,
+  "balance": 100
 }
 
 ### Negative test. A user cannot deposit 0 to self balance
@@ -61,7 +81,7 @@ Authorization: Basic YWRtaW46YWRtaW4=
   "amount": 10001
 }
 
-### Negative test. A user cannot transfer 10001 to another user
+### Positive test. A user can transfer 0.01 to another account
 POST http://localhost:4111/api/v1/accounts/transfer
 Content-Type: application/json
 Authorization: Basic YWRtaW46YWRtaW4=
@@ -69,10 +89,10 @@ Authorization: Basic YWRtaW46YWRtaW4=
 {
   "senderAccountId": 1,
   "receiverAccountId": 2,
-  "amount": 10001
+  "amount": 0.01
 }
 
-### Negative test. A user has's enouth amount to transfer.
+### Negative test. A user has not enouth amount to transfer.
 POST http://localhost:4111/api/v1/accounts/transfer
 Content-Type: application/json
 Authorization: Basic YWRtaW46YWRtaW4=
