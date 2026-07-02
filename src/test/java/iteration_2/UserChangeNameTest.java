@@ -1,63 +1,41 @@
 package iteration_2;
 
-import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.http.ContentType;
-import org.apache.http.HttpStatus;
-import org.json.JSONObject;
-import org.junit.jupiter.api.BeforeAll;
+import models.CustomerRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import requests.CustomerRequester;
+import specs.RequestSpecs;
+import specs.ResponseSpec;
 
-import java.util.List;
-
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
 public class UserChangeNameTest {
-    final String AUTH = "Basic dGVzdFVzZXIxOnRlc3RVc2VyMSQ=";
-
-    @BeforeAll
-    public static void setupRestAssured(){
-        RestAssured.filters(List.of(new RequestLoggingFilter(), new ResponseLoggingFilter()));
-    }
 
     @Test
     public void userCanChangeName() {
-        RestAssured.baseURI = "http://localhost:4111/api/v1";
-        JSONObject requestBody = new JSONObject().put("name", "New Name");
+        CustomerRequest customerRequest = CustomerRequest.builder()
+                .name("New Name")
+                .build();
 
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .body(requestBody.toString())
-                .when()
-                .put("/customer/profile")
-                .then()
+        new CustomerRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsOK("message", "Profile updated successfully"))
+                .put(customerRequest)
                 .assertThat()
-                .statusCode(HttpStatus.SC_OK)
                 .body("customer.name", equalTo("New Name"));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"Ne1w 3Name", "NewName", "Name"})
-    public void userCannotPutInvalidName(String name) {
-        RestAssured.baseURI = "http://localhost:4111/api/v1";
-        JSONObject requestBody = new JSONObject().put("name", name);
+    @ValueSource(strings = {"Ne1w 3Name", "NewName", "Name", " "})
+    public void userCannotPutInvalidName(String newName) {
+        CustomerRequest customerRequest = CustomerRequest.builder()
+                .name(newName)
+                .build();
 
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .body(requestBody.toString())
-                .when()
-                .put("/customer/profile")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(equalTo("Name must contain two words with letters only"));
+        new CustomerRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsBadRequest("Name must contain two words with letters only"))
+                .put(customerRequest);
     }
 }

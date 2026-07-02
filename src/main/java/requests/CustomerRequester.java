@@ -7,17 +7,17 @@ import models.CustomerRequest;
 
 import static io.restassured.RestAssured.given;
 
-public class CustomerRequester extends Request<CustomerRequest> {
+public class CustomerRequester extends PutRequest<CustomerRequest> {
     public CustomerRequester(RequestSpecification requestSpecification, ResponseSpecification responseSpecification) {
         super(requestSpecification, responseSpecification);
     }
 
     @Override
-    public ValidatableResponse post(CustomerRequest model) {
+    public ValidatableResponse put(CustomerRequest model) {
         return given()
                 .spec(requestSpecification)
                 .body(model)
-                .post("api/v1/customer/profile")
+                .put("api/v1/customer/profile")
                 .then()
                 .assertThat()
                 .spec(responseSpecification);
