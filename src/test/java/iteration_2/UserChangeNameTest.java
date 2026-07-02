@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 
 public class UserChangeNameTest {
     final String AUTH = "Basic dGVzdFVzZXIxOnRlc3RVc2VyMSQ=";
@@ -37,7 +38,8 @@ public class UserChangeNameTest {
                 .put("/customer/profile")
                 .then()
                 .assertThat()
-                .statusCode(HttpStatus.SC_OK);
+                .statusCode(HttpStatus.SC_OK)
+                .body("customer.name", equalTo("New Name"));
     }
 
     @ParameterizedTest
@@ -55,6 +57,7 @@ public class UserChangeNameTest {
                 .put("/customer/profile")
                 .then()
                 .assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST);
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(equalTo("Name must contain two words with letters only"));
     }
 }
