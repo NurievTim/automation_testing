@@ -1,118 +1,64 @@
 package iteration_2;
 
-import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.http.ContentType;
-import org.apache.http.HttpStatus;
-import org.json.JSONObject;
-import org.junit.jupiter.api.BeforeAll;
+import models.DepositRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import requests.DepositRequester;
+import specs.RequestSpecs;
+import specs.ResponseSpec;
 
-import java.util.List;
-
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import java.util.stream.Stream;
 
 public class UserDepositTest {
-    final String AUTH = "Basic dGVzdFVzZXIxOnRlc3RVc2VyMSQ=";
-
-    @BeforeAll
-    public static void setupRestAssured() {
-        RestAssured.filters(List.of(new RequestLoggingFilter(), new ResponseLoggingFilter()));
-    }
 
     @ParameterizedTest
     @ValueSource(doubles = {5000, 4999.99, 0.01})
     public void userCanDepositToSelfAccount(double amount) {
-        RestAssured.baseURI = "http://localhost:4111/api/v1";
-        JSONObject requestBody = new JSONObject().put("id", 1).put("balance", amount);
+        DepositRequest depositRequest = DepositRequest.builder()
+                .id(1)
+                .balance(amount)
+                .build();
 
-        float balance = given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .body(requestBody.toString())
-                .when()
-                .post("/accounts/deposit")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("id", equalTo(requestBody.get("id")))
-                .extract()
-                .path("balance");
+        new DepositRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsOK())
+                .post(depositRequest);
+    }
 
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .when()
-                .get("/customer/profile")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("accounts[0].balance", equalTo(balance));
+    public static Stream<Arguments> invalidBalance() {
+        return Stream.of(
+                Arguments.of(5000.1, "Deposit amount cannot exceed 5000"),
+                Arguments.of(0, "Deposit amount must be at least 0.01")
+        );
     }
 
     @ParameterizedTest
-    @ValueSource(doubles = {5001, 0})
-    public void userCannotDepositInadmissibleAmountToSelfAccount(double amount) {
-        RestAssured.baseURI = "http://localhost:4111/api/v1";
-        JSONObject requestBody = new JSONObject().put("id", 1).put("balance", amount);
+    @MethodSource("invalidBalance")
+    public void userCannotDepositInadmissibleAmountToSelfAccount(double amount, String errorMessage) {
+        DepositRequest depositRequest = DepositRequest.builder()
+                .id(1)
+                .balance(amount)
+                .build();
 
-        float balance = given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .when()
-                .get("/customer/profile")
-                .then()
-                .extract()
-                .path("accounts[0].balance");
-
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .body(requestBody.toString())
-                .when()
-                .post("/accounts/deposit")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST);
-
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .when()
-                .get("/customer/profile")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("accounts[0].balance", equalTo(balance));
-
-
+        new DepositRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsBadRequest(errorMessage))
+                .post(depositRequest);
     }
 
     @Test
     public void userCannotDepositToNonExistentAccount() {
-        RestAssured.baseURI = "http://localhost:4111/api/v1";
-        JSONObject requestBody = new JSONObject().put("id", 10).put("balance", 100);
+        DepositRequest depositRequest = DepositRequest.builder()
+                .id(10)
+                .balance(100)
+                .build();
 
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .body(requestBody.toString())
-                .when()
-                .post("/accounts/deposit")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_FORBIDDEN)
-                .body(equalTo("Unauthorized access to account"));
-
+        new DepositRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsForbidden("Unauthorized access to account"))
+                .post(depositRequest);
     }
 }

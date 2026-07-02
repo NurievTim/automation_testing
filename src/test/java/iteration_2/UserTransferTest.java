@@ -30,7 +30,7 @@ public class UserTransferTest {
     @ParameterizedTest
     @ValueSource(doubles = {0.01, 9999.99, 10000})
     public void userCanTransferBetweenTheirAccounts(double amount) {
-        RestAssured.baseURI = "http://localhost:4111/api/v1";
+        RestAssured.baseURI = "http://localhost:4111";
         JSONObject requestBody = new JSONObject()
                 .put("amount", amount)
                 .put("receiverAccountId", 2)
@@ -52,7 +52,7 @@ public class UserTransferTest {
                 .header("Authorization", AUTH)
                 .body(requestBody.toString())
                 .when()
-                .post("/accounts/transfer")
+                .post("/api/v1/accounts/transfer")
                 .then()
                 .assertThat()
                 .statusCode(HttpStatus.SC_OK)
