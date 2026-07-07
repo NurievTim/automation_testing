@@ -7,8 +7,10 @@ import org.apache.http.HttpStatus;
 import static org.hamcrest.Matchers.equalTo;
 
 public class ResponseSpec {
-    private ResponseSpec() {
-    }
+    private ResponseSpec() {}
+
+    public static final String PROFILE_UPDATED_SUCCESSFULLY = "Profile updated successfully";
+    public static final String NAME_VALIDATION_ERROR = "Name must contain two words with letters only";
 
     private static ResponseSpecBuilder defaultResponseBuilder() {
         return new ResponseSpecBuilder();
