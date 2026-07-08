@@ -22,4 +22,14 @@ public class TransferRequester extends Request<TransferRequest> {
                 .assertThat()
                 .spec(responseSpecification);
     }
+
+    @Override
+    public ValidatableResponse get() {
+        return null;
+    }
+
+    @Override
+    public ValidatableResponse put(TransferRequest model) {
+        return null;
+    }
 }

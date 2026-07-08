@@ -22,4 +22,14 @@ public class DepositRequester extends Request<DepositRequest>{
                 .assertThat()
                 .spec(responseSpecification);
     }
+
+    @Override
+    public ValidatableResponse get() {
+        return null;
+    }
+
+    @Override
+    public ValidatableResponse put(DepositRequest model) {
+        return null;
+    }
 }
