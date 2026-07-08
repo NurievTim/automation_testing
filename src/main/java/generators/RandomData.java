@@ -30,4 +30,12 @@ public class RandomData {
     public static String generateOnlySpaces() {
         return " ".repeat(faker.number().numberBetween(1, 10));
     }
+
+    public static int generateDepositAmount() {
+        return faker.number().numberBetween(0, 5000);
+    }
+
+    public static int generateTransferAmount() {
+        return faker.number().numberBetween(0, 10000);
+    }
 }

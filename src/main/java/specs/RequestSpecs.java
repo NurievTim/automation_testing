@@ -24,4 +24,16 @@ public class RequestSpecs {
                 .addHeader("Authorization", "Basic dGVzdFVzZXIxOnRlc3RVc2VyMSQ=")
                 .build();
     }
+
+    public static RequestSpecification userEmptyBalanceSpec() {
+        return defaultRequestBuilder()
+                .addHeader("Authorization", "Basic dGVzdFVzZXIzOnRlc3RVc2VyMyQ=")
+                .build();
+    }
+
+    public static RequestSpecification secondUserSpec() {
+        return defaultRequestBuilder()
+                .addHeader("Authorization", "Basic dGVzdFVzZXIyOnRlc3RVc2VyMiQ=")
+                .build();
+    }
 }
