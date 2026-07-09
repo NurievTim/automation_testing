@@ -16,7 +16,7 @@ public class RequestSpecs {
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
                 .addFilters(List.of(new RequestLoggingFilter(), new ResponseLoggingFilter()))
-                .setBaseUri("http://localhost:4111");
+                .setBaseUri("http://localhost:4111/api/v1/");
     }
 
     public static RequestSpecification userSpec() {
