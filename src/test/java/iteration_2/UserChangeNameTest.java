@@ -7,7 +7,9 @@ import models.CustomerResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.CustomerRequester;
+import requests.skeleton.Endpoint;
+import requests.skeleton.requests.CrudRequester;
+import requests.skeleton.requests.ValidatedCrudRequest;
 import specs.RequestSpecs;
 import specs.ResponseSpec;
 
@@ -23,12 +25,11 @@ public class UserChangeNameTest {
                 .name(RandomData.getValidName())
                 .build();
 
-        CustomerResponse customerResponse = new CustomerRequester(
+        CustomerResponse customerResponse = new ValidatedCrudRequest<CustomerResponse>(
                 RequestSpecs.userSpec(),
+                Endpoint.PROFILE,
                 ResponseSpec.requestReturnsOK("message", ResponseSpec.PROFILE_UPDATED_SUCCESSFULLY))
-                .put(customerRequest)
-                .assertThat()
-                .extract().as(Customer.class).getCustomer();
+                .put(customerRequest);
 
         assertEquals(customerRequest.getName(), customerResponse.getName());
     }
@@ -49,8 +50,9 @@ public class UserChangeNameTest {
                 .name(invalidName)
                 .build();
 
-        new CustomerRequester(
+        new CrudRequester(
                 RequestSpecs.userSpec(),
+                Endpoint.PROFILE,
                 ResponseSpec.requestReturnsBadRequest(ResponseSpec.NAME_VALIDATION_ERROR))
                 .put(customerRequest);
     }

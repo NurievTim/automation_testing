@@ -8,8 +8,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import requests.CustomerRequester;
-import requests.DepositRequester;
+import requests.skeleton.Endpoint;
+import requests.skeleton.requests.CrudRequester;
+import requests.skeleton.requests.ValidatedCrudRequest;
 import specs.RequestSpecs;
 import specs.ResponseSpec;
 
@@ -24,35 +25,32 @@ public class UserDepositTest {
     @ValueSource(doubles = {5000, 4999.99, 0.01})
     public void userCanDepositToSelfAccount(double amount) {
 
-        double balanceBefore = new CustomerRequester(
+        CustomerResponse customerResponseBefore = new ValidatedCrudRequest<CustomerResponse>(
                 RequestSpecs.userSpec(),
+                Endpoint.PROFILE,
                 ResponseSpec.requestReturnsOK())
-                .get()
-                .extract()
-                .as(CustomerResponse.class)
-                .getAccounts()
-                .getFirst()
-                .getBalance();
+                .get();
+
+        double balanceBefore = customerResponseBefore.getAccounts().getFirst().getBalance();
 
         DepositRequest depositRequest = DepositRequest.builder()
                 .id(1)
                 .balance(amount)
                 .build();
 
-        new DepositRequester(
+        new CrudRequester(
                 RequestSpecs.userSpec(),
+                Endpoint.DEPOSIT,
                 ResponseSpec.requestReturnsOK())
                 .post(depositRequest);
 
-        double balanceAfter = new CustomerRequester(
+        CustomerResponse customerResponseAfter = new ValidatedCrudRequest<CustomerResponse>(
                 RequestSpecs.userSpec(),
+                Endpoint.PROFILE,
                 ResponseSpec.requestReturnsOK())
-                .get()
-                .extract()
-                .as(CustomerResponse.class)
-                .getAccounts()
-                .getFirst()
-                .getBalance();
+                .get();
+
+        double balanceAfter = customerResponseAfter.getAccounts().getFirst().getBalance();
 
         assertTrue(balanceBefore < balanceAfter);
     }
@@ -68,35 +66,32 @@ public class UserDepositTest {
     @MethodSource("invalidBalance")
     public void userCannotDepositInadmissibleAmountToSelfAccount(double amount, String errorMessage) {
 
-        double balanceBefore = new CustomerRequester(
+        CustomerResponse customerResponseBefore = new ValidatedCrudRequest<CustomerResponse>(
                 RequestSpecs.userSpec(),
+                Endpoint.PROFILE,
                 ResponseSpec.requestReturnsOK())
-                .get()
-                .extract()
-                .as(CustomerResponse.class)
-                .getAccounts()
-                .getFirst()
-                .getBalance();
+                .get();
+
+        double balanceBefore = customerResponseBefore.getAccounts().getFirst().getBalance();
 
         DepositRequest depositRequest = DepositRequest.builder()
                 .id(1)
                 .balance(amount)
                 .build();
 
-        new DepositRequester(
+        new CrudRequester(
                 RequestSpecs.userSpec(),
+                Endpoint.DEPOSIT,
                 ResponseSpec.requestReturnsBadRequest(errorMessage))
                 .post(depositRequest);
 
-        double balanceAfter = new CustomerRequester(
+        CustomerResponse customerResponseAfter = new ValidatedCrudRequest<CustomerResponse>(
                 RequestSpecs.userSpec(),
+                Endpoint.PROFILE,
                 ResponseSpec.requestReturnsOK())
-                .get()
-                .extract()
-                .as(CustomerResponse.class)
-                .getAccounts()
-                .getFirst()
-                .getBalance();
+                .get();
+
+        double balanceAfter = customerResponseAfter.getAccounts().getFirst().getBalance();
 
         assertEquals(balanceBefore, balanceAfter);
     }
@@ -108,8 +103,9 @@ public class UserDepositTest {
                 .balance(RandomData.generateDepositAmount())
                 .build();
 
-        new DepositRequester(
+        new CrudRequester(
                 RequestSpecs.userSpec(),
+                Endpoint.DEPOSIT,
                 ResponseSpec.requestReturnsForbidden())
                 .post(depositRequest);
     }
