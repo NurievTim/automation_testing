@@ -12,6 +12,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import requests.skeleton.Endpoint;
 import requests.skeleton.requests.CrudRequester;
 import requests.skeleton.requests.ValidatedCrudRequest;
+import requests.steps.ProfileSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpec;
 
@@ -68,13 +69,7 @@ public class UserTransferTest {
     @MethodSource("invalidAmount")
     public void userCannotTransferInadmissibleAmountBetweenTheirAccounts(double amount, String errorMessage) {
 
-        CustomerResponse customerResponseBefore = new ValidatedCrudRequest<CustomerResponse>(
-                RequestSpecs.userSpec(),
-                Endpoint.PROFILE,
-                ResponseSpec.requestReturnsOK())
-                .get();
-
-        double balanceBefore = customerResponseBefore.getAccounts().get(1).getBalance();
+        double balanceBefore = ProfileSteps.userGetBalance(2);
 
         TransferRequest transferRequest = TransferRequest.builder()
                 .amount(amount)
@@ -88,13 +83,7 @@ public class UserTransferTest {
                 ResponseSpec.requestReturnsBadRequest(errorMessage))
                 .post(transferRequest);
 
-        CustomerResponse customerResponseAfter = new ValidatedCrudRequest<CustomerResponse>(
-                RequestSpecs.userSpec(),
-                Endpoint.PROFILE,
-                ResponseSpec.requestReturnsOK())
-                .get();
-
-        double balanceAfter = customerResponseAfter.getAccounts().get(1).getBalance();
+        double balanceAfter = ProfileSteps.userGetBalance(2);
 
         assertEquals(balanceBefore, balanceAfter);
     }
@@ -138,7 +127,7 @@ public class UserTransferTest {
     public void userCanTransferToAnotherUser() {
 
         CustomerResponse customerResponseBefore = new ValidatedCrudRequest<CustomerResponse>(
-                RequestSpecs.userSpec(),
+                RequestSpecs.secondUserSpec(),
                 Endpoint.PROFILE,
                 ResponseSpec.requestReturnsOK())
                 .get();
@@ -158,7 +147,7 @@ public class UserTransferTest {
                 .post(transferRequest);
 
         CustomerResponse customerResponseAfter = new ValidatedCrudRequest<CustomerResponse>(
-                RequestSpecs.userSpec(),
+                RequestSpecs.secondUserSpec(),
                 Endpoint.PROFILE,
                 ResponseSpec.requestReturnsOK())
                 .get();

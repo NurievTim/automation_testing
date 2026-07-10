@@ -1,8 +1,11 @@
 package iteration_2;
 
 import generators.RandomData;
+import io.restassured.response.ValidatableResponse;
+import models.Customer;
 import models.CustomerRequest;
 import models.CustomerResponse;
+import models.comparison.ModelAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -25,11 +28,16 @@ public class UserChangeNameTest {
                 .name(RandomData.getValidName())
                 .build();
 
-        CustomerResponse customerResponse = new ValidatedCrudRequest<CustomerResponse>(
+        ValidatableResponse response = new CrudRequester(
                 RequestSpecs.userSpec(),
                 Endpoint.PROFILE,
                 ResponseSpec.requestReturnsOK("message", ResponseSpec.PROFILE_UPDATED_SUCCESSFULLY))
                 .put(customerRequest);
+
+        Customer customer = response.extract().as(Customer.class);
+        CustomerResponse customerResponse = customer.getCustomer();
+
+        ModelAssertions.assertThatModels(customerRequest, customerResponse).match();
 
         CustomerResponse customerResponseProfile = new ValidatedCrudRequest<CustomerResponse>(
                 RequestSpecs.userSpec(),
@@ -37,7 +45,6 @@ public class UserChangeNameTest {
                 ResponseSpec.requestReturnsOK())
                 .get();
 
-        assertEquals(customerRequest.getName(), customerResponse.getName());
         assertEquals(customerRequest.getName(), customerResponseProfile.getName());
     }
 

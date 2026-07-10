@@ -12,6 +12,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import requests.skeleton.Endpoint;
 import requests.skeleton.requests.CrudRequester;
 import requests.skeleton.requests.ValidatedCrudRequest;
+import requests.steps.ProfileSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpec;
 
@@ -45,13 +46,7 @@ public class UserDepositTest {
                 ResponseSpec.requestReturnsOK())
                 .post(depositRequest);
 
-        CustomerResponse customerResponseAfter = new ValidatedCrudRequest<CustomerResponse>(
-                RequestSpecs.userSpec(),
-                Endpoint.PROFILE,
-                ResponseSpec.requestReturnsOK())
-                .get();
-
-        double balanceAfter = customerResponseAfter.getAccounts().getFirst().getBalance();
+        double balanceAfter = ProfileSteps.userGetBalance(account.getId());
 
         assertTrue(account.getBalance() < balanceAfter);
     }
@@ -86,13 +81,7 @@ public class UserDepositTest {
                 ResponseSpec.requestReturnsBadRequest(errorMessage))
                 .post(depositRequest);
 
-        CustomerResponse customerResponseAfter = new ValidatedCrudRequest<CustomerResponse>(
-                RequestSpecs.userSpec(),
-                Endpoint.PROFILE,
-                ResponseSpec.requestReturnsOK())
-                .get();
-
-        double balanceAfter = customerResponseAfter.getAccounts().getFirst().getBalance();
+        double balanceAfter = ProfileSteps.userGetBalance(account.getId());
 
         assertEquals(account.getBalance(), balanceAfter);
     }

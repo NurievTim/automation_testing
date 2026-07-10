@@ -2,7 +2,6 @@ package requests.skeleton;
 
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
-import net.datafaker.service.Range;
 
 public abstract class HttpRequest {
     protected RequestSpecification requestSpecification;
