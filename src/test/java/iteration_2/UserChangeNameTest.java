@@ -1,21 +1,20 @@
 package iteration_2;
 
 import generators.RandomData;
+import io.restassured.response.ValidatableResponse;
 import models.Customer;
 import models.CustomerRequest;
 import models.CustomerResponse;
+import models.comparison.ModelAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import requests.skeleton.Endpoint;
 import requests.skeleton.requests.CrudRequester;
-import requests.skeleton.requests.ValidatedCrudRequest;
 import specs.RequestSpecs;
 import specs.ResponseSpec;
 
 import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class UserChangeNameTest {
 
@@ -25,13 +24,16 @@ public class UserChangeNameTest {
                 .name(RandomData.getValidName())
                 .build();
 
-        CustomerResponse customerResponse = new ValidatedCrudRequest<CustomerResponse>(
+        ValidatableResponse response = new CrudRequester(
                 RequestSpecs.userSpec(),
                 Endpoint.PROFILE,
                 ResponseSpec.requestReturnsOK("message", ResponseSpec.PROFILE_UPDATED_SUCCESSFULLY))
                 .put(customerRequest);
 
-        assertEquals(customerRequest.getName(), customerResponse.getName());
+        Customer customer = response.extract().as(Customer.class);
+        CustomerResponse customerResponse = customer.getCustomer();
+
+        ModelAssertions.assertThatModels(customerRequest, customerResponse).match();
     }
 
     static Stream<String> invalidNameProvider() {

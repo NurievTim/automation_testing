@@ -1,7 +1,6 @@
 package iteration_2;
 
 import generators.RandomData;
-import models.CustomerResponse;
 import models.DepositRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -10,7 +9,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import requests.skeleton.Endpoint;
 import requests.skeleton.requests.CrudRequester;
-import requests.skeleton.requests.ValidatedCrudRequest;
+import requests.steps.ProfileSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpec;
 
@@ -25,13 +24,7 @@ public class UserDepositTest {
     @ValueSource(doubles = {5000, 4999.99, 0.01})
     public void userCanDepositToSelfAccount(double amount) {
 
-        CustomerResponse customerResponseBefore = new ValidatedCrudRequest<CustomerResponse>(
-                RequestSpecs.userSpec(),
-                Endpoint.PROFILE,
-                ResponseSpec.requestReturnsOK())
-                .get();
-
-        double balanceBefore = customerResponseBefore.getAccounts().getFirst().getBalance();
+        double balanceBefore = ProfileSteps.userGetBalance(1);
 
         DepositRequest depositRequest = DepositRequest.builder()
                 .id(1)
@@ -44,15 +37,10 @@ public class UserDepositTest {
                 ResponseSpec.requestReturnsOK())
                 .post(depositRequest);
 
-        CustomerResponse customerResponseAfter = new ValidatedCrudRequest<CustomerResponse>(
-                RequestSpecs.userSpec(),
-                Endpoint.PROFILE,
-                ResponseSpec.requestReturnsOK())
-                .get();
-
-        double balanceAfter = customerResponseAfter.getAccounts().getFirst().getBalance();
+        double balanceAfter = ProfileSteps.userGetBalance(1);
 
         assertTrue(balanceBefore < balanceAfter);
+
     }
 
     public static Stream<Arguments> invalidBalance() {
@@ -66,13 +54,7 @@ public class UserDepositTest {
     @MethodSource("invalidBalance")
     public void userCannotDepositInadmissibleAmountToSelfAccount(double amount, String errorMessage) {
 
-        CustomerResponse customerResponseBefore = new ValidatedCrudRequest<CustomerResponse>(
-                RequestSpecs.userSpec(),
-                Endpoint.PROFILE,
-                ResponseSpec.requestReturnsOK())
-                .get();
-
-        double balanceBefore = customerResponseBefore.getAccounts().getFirst().getBalance();
+        double balanceBefore = ProfileSteps.userGetBalance(1);
 
         DepositRequest depositRequest = DepositRequest.builder()
                 .id(1)
@@ -85,13 +67,7 @@ public class UserDepositTest {
                 ResponseSpec.requestReturnsBadRequest(errorMessage))
                 .post(depositRequest);
 
-        CustomerResponse customerResponseAfter = new ValidatedCrudRequest<CustomerResponse>(
-                RequestSpecs.userSpec(),
-                Endpoint.PROFILE,
-                ResponseSpec.requestReturnsOK())
-                .get();
-
-        double balanceAfter = customerResponseAfter.getAccounts().getFirst().getBalance();
+        double balanceAfter = ProfileSteps.userGetBalance(1);
 
         assertEquals(balanceBefore, balanceAfter);
     }
