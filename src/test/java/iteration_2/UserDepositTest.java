@@ -1,6 +1,7 @@
 package iteration_2;
 
 import generators.RandomData;
+import models.Accounts;
 import models.CustomerResponse;
 import models.DepositRequest;
 import org.junit.jupiter.api.Test;
@@ -24,18 +25,17 @@ public class UserDepositTest {
     @ValueSource(doubles = {5000, 4999.99, 0.01})
     public void userCanDepositToSelfAccount(double amount) {
 
-        double balanceBefore = new CustomerRequester(
+        Accounts account = new CustomerRequester(
                 RequestSpecs.userSpec(),
                 ResponseSpec.requestReturnsOK())
                 .get()
                 .extract()
                 .as(CustomerResponse.class)
                 .getAccounts()
-                .getFirst()
-                .getBalance();
+                .getFirst();
 
         DepositRequest depositRequest = DepositRequest.builder()
-                .id(1)
+                .id(account.getId())
                 .balance(amount)
                 .build();
 
@@ -54,7 +54,7 @@ public class UserDepositTest {
                 .getFirst()
                 .getBalance();
 
-        assertTrue(balanceBefore < balanceAfter);
+        assertTrue(account.getBalance() < balanceAfter);
     }
 
     public static Stream<Arguments> invalidBalance() {
@@ -68,18 +68,17 @@ public class UserDepositTest {
     @MethodSource("invalidBalance")
     public void userCannotDepositInadmissibleAmountToSelfAccount(double amount, String errorMessage) {
 
-        double balanceBefore = new CustomerRequester(
+        Accounts account = new CustomerRequester(
                 RequestSpecs.userSpec(),
                 ResponseSpec.requestReturnsOK())
                 .get()
                 .extract()
                 .as(CustomerResponse.class)
                 .getAccounts()
-                .getFirst()
-                .getBalance();
+                .getFirst();
 
         DepositRequest depositRequest = DepositRequest.builder()
-                .id(1)
+                .id(account.getId())
                 .balance(amount)
                 .build();
 
@@ -98,7 +97,7 @@ public class UserDepositTest {
                 .getFirst()
                 .getBalance();
 
-        assertEquals(balanceBefore, balanceAfter);
+        assertEquals(account.getBalance(), balanceAfter);
     }
 
     @Test
