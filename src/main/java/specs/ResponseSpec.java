@@ -9,6 +9,8 @@ import static org.hamcrest.Matchers.equalTo;
 public class ResponseSpec {
     private ResponseSpec() {}
 
+    private static final String MESSAGE_JSON_PATH = "message";
+
     public static final String PROFILE_UPDATED_SUCCESSFULLY = "Profile updated successfully";
     public static final String NAME_VALIDATION_ERROR = "Name must contain two words with letters only";
     public static final String SUCCESS_TRANSFER = "Transfer successful";
@@ -29,10 +31,10 @@ public class ResponseSpec {
                 build();
     }
 
-    public static ResponseSpecification requestReturnsOK(String successKey, String successMessage) {
+    public static ResponseSpecification requestReturnsOK(String successMessage) {
         return defaultResponseBuilder()
                 .expectStatusCode(HttpStatus.SC_OK)
-                .expectBody(successKey, equalTo(successMessage)).
+                .expectBody(MESSAGE_JSON_PATH, equalTo(successMessage)).
                 build();
     }
 

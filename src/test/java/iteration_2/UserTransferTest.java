@@ -1,6 +1,7 @@
 package iteration_2;
 
 import generators.RandomData;
+import models.Accounts;
 import models.CustomerResponse;
 import models.TransferRequest;
 import org.junit.jupiter.api.Test;
@@ -42,7 +43,7 @@ public class UserTransferTest {
 
         new TransferRequester(
                 RequestSpecs.userSpec(),
-                ResponseSpec.requestReturnsOK("message", ResponseSpec.SUCCESS_TRANSFER))
+                ResponseSpec.requestReturnsOK(ResponseSpec.SUCCESS_TRANSFER))
                 .post(transferRequest);
 
         double balanceAfter = new CustomerRequester(
@@ -100,14 +101,24 @@ public class UserTransferTest {
                 .get(1)
                 .getBalance();
 
-        assertEquals(balanceBefore,  balanceAfter);
+        assertEquals(balanceBefore, balanceAfter);
     }
 
     @Test
     public void userHasNotEnoughAmountToTransfer() {
+
+        Accounts account = new CustomerRequester(
+                RequestSpecs.userEmptyBalanceSpec(),
+                ResponseSpec.requestReturnsOK())
+                .get()
+                .extract()
+                .as(CustomerResponse.class)
+                .getAccounts()
+                .getFirst();
+
         TransferRequest transferRequest = TransferRequest.builder()
                 .amount(RandomData.generateTransferAmount())
-                .senderAccountId(4)
+                .senderAccountId(account.getId())
                 .receiverAccountId(1)
                 .build();
 
@@ -115,6 +126,18 @@ public class UserTransferTest {
                 RequestSpecs.userEmptyBalanceSpec(),
                 ResponseSpec.requestReturnsBadRequest(ResponseSpec.ERROR_TRANSFER))
                 .post(transferRequest);
+
+        double balanceAfter = new CustomerRequester(
+                RequestSpecs.userEmptyBalanceSpec(),
+                ResponseSpec.requestReturnsOK())
+                .get()
+                .extract()
+                .as(CustomerResponse.class)
+                .getAccounts()
+                .getFirst()
+                .getBalance();
+
+        assertEquals(account.getBalance(), balanceAfter);
     }
 
     @Test
@@ -138,7 +161,7 @@ public class UserTransferTest {
 
         new TransferRequester(
                 RequestSpecs.userSpec(),
-                ResponseSpec.requestReturnsOK("message", ResponseSpec.SUCCESS_TRANSFER))
+                ResponseSpec.requestReturnsOK(ResponseSpec.SUCCESS_TRANSFER))
                 .post(transferRequest);
 
         double balanceAfter = new CustomerRequester(

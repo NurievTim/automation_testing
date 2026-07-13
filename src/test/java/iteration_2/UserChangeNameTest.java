@@ -25,7 +25,7 @@ public class UserChangeNameTest {
 
         CustomerResponse customerResponse = new CustomerRequester(
                 RequestSpecs.userSpec(),
-                ResponseSpec.requestReturnsOK("message", ResponseSpec.PROFILE_UPDATED_SUCCESSFULLY))
+                ResponseSpec.requestReturnsOK(ResponseSpec.PROFILE_UPDATED_SUCCESSFULLY))
                 .put(customerRequest)
                 .assertThat()
                 .extract().as(Customer.class).getCustomer();
