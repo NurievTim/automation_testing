@@ -11,7 +11,7 @@ public class ProfileSteps {
     public static double userGetBalance(int accountId) {
         CustomerResponse customerResponse = new ValidatedCrudRequest<CustomerResponse>(
                 RequestSpecs.userSpec(),
-                Endpoint.PROFILE,
+                Endpoint.GET_PROFILE,
                 ResponseSpec.requestReturnsOK())
                 .get();
 

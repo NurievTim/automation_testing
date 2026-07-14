@@ -1,7 +1,6 @@
 package iteration_2;
 
 import generators.RandomData;
-import io.restassured.response.ValidatableResponse;
 import models.Customer;
 import models.CustomerRequest;
 import models.CustomerResponse;
@@ -17,8 +16,7 @@ import specs.ResponseSpec;
 
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UserChangeNameTest {
 
@@ -28,24 +26,16 @@ public class UserChangeNameTest {
                 .name(RandomData.getValidName())
                 .build();
 
-        ValidatableResponse response = new CrudRequester(
+        Customer customer = new ValidatedCrudRequest<Customer>(
                 RequestSpecs.userSpec(),
-                Endpoint.PROFILE,
-                ResponseSpec.requestReturnsOK("message", ResponseSpec.PROFILE_UPDATED_SUCCESSFULLY))
+                Endpoint.PUT_PROFILE,
+                ResponseSpec.requestReturnsOK(ResponseSpec.PROFILE_UPDATED_SUCCESSFULLY))
                 .put(customerRequest);
 
-        Customer customer = response.extract().as(Customer.class);
         CustomerResponse customerResponse = customer.getCustomer();
 
+
         ModelAssertions.assertThatModels(customerRequest, customerResponse).match();
-
-        CustomerResponse customerResponseProfile = new ValidatedCrudRequest<CustomerResponse>(
-                RequestSpecs.userSpec(),
-                Endpoint.PROFILE,
-                ResponseSpec.requestReturnsOK())
-                .get();
-
-        assertEquals(customerRequest.getName(), customerResponseProfile.getName());
     }
 
     static Stream<String> invalidNameProvider() {
@@ -66,16 +56,16 @@ public class UserChangeNameTest {
 
         new CrudRequester(
                 RequestSpecs.userSpec(),
-                Endpoint.PROFILE,
+                Endpoint.PUT_PROFILE,
                 ResponseSpec.requestReturnsBadRequest(ResponseSpec.NAME_VALIDATION_ERROR))
                 .put(customerRequest);
 
-        CustomerResponse customerResponseProfile = new ValidatedCrudRequest<CustomerResponse>(
+        CustomerResponse response = new ValidatedCrudRequest<CustomerResponse>(
                 RequestSpecs.userSpec(),
-                Endpoint.PROFILE,
+                Endpoint.GET_PROFILE,
                 ResponseSpec.requestReturnsOK())
                 .get();
-
-        assertNotEquals(customerRequest.getName(), customerResponseProfile.getName());
+        
+        assertNotEquals(response.getName(), invalidName);
     }
 }

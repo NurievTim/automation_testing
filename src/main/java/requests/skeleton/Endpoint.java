@@ -17,10 +17,15 @@ public enum Endpoint {
             TransferRequest.class,
             TransferResponse.class
     ),
-    PROFILE(
+    GET_PROFILE(
             "/customer/profile",
             CustomerRequest.class,
             CustomerResponse.class
+    ),
+    PUT_PROFILE(
+            "/customer/profile",
+            CustomerRequest.class,
+            Customer.class
     );
     private final String url;
     private final Class<? extends BaseModel> requestModel;
