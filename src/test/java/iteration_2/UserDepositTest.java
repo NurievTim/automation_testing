@@ -1,6 +1,7 @@
 package iteration_2;
 
 import generators.RandomData;
+import models.CustomerResponse;
 import models.DepositRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -9,6 +10,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import requests.skeleton.Endpoint;
 import requests.skeleton.requests.CrudRequester;
+import requests.skeleton.requests.ValidatedCrudRequest;
 import requests.steps.ProfileSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpec;
@@ -23,11 +25,18 @@ public class UserDepositTest {
     @ParameterizedTest
     @ValueSource(doubles = {5000, 4999.99, 0.01})
     public void userCanDepositToSelfAccount(double amount) {
+        CustomerResponse customerResponse = new ValidatedCrudRequest<CustomerResponse>(
+                RequestSpecs.userSpec(),
+                Endpoint.GET_PROFILE,
+                ResponseSpec.requestReturnsOK())
+                .get();
 
-        double balanceBefore = ProfileSteps.userGetBalance(1);
+        int accountId = customerResponse.getAccounts().getFirst().getId();
+
+        double balanceBefore = ProfileSteps.userGetBalance(accountId);
 
         DepositRequest depositRequest = DepositRequest.builder()
-                .id(1)
+                .id(accountId)
                 .balance(amount)
                 .build();
 
@@ -37,7 +46,7 @@ public class UserDepositTest {
                 ResponseSpec.requestReturnsOK())
                 .post(depositRequest);
 
-        double balanceAfter = ProfileSteps.userGetBalance(1);
+        double balanceAfter = ProfileSteps.userGetBalance(accountId);
 
         assertTrue(balanceBefore < balanceAfter);
 
@@ -45,19 +54,19 @@ public class UserDepositTest {
 
     public static Stream<Arguments> invalidBalance() {
         return Stream.of(
-                Arguments.of(5000.01, ResponseSpec.DEPOSIT_MAX_LIMIT),
-                Arguments.of(0, ResponseSpec.DEPOSIT_MIN_LIMIT)
+                Arguments.of(1, 5000.01, ResponseSpec.DEPOSIT_MAX_LIMIT),
+                Arguments.of(1, 0, ResponseSpec.DEPOSIT_MIN_LIMIT)
         );
     }
 
     @ParameterizedTest
     @MethodSource("invalidBalance")
-    public void userCannotDepositInadmissibleAmountToSelfAccount(double amount, String errorMessage) {
+    public void userCannotDepositInadmissibleAmountToSelfAccount(int accountId, double amount, String errorMessage) {
 
-        double balanceBefore = ProfileSteps.userGetBalance(1);
+        double balanceBefore = ProfileSteps.userGetBalance(accountId);
 
         DepositRequest depositRequest = DepositRequest.builder()
-                .id(1)
+                .id(accountId)
                 .balance(amount)
                 .build();
 
@@ -67,15 +76,18 @@ public class UserDepositTest {
                 ResponseSpec.requestReturnsBadRequest(errorMessage))
                 .post(depositRequest);
 
-        double balanceAfter = ProfileSteps.userGetBalance(1);
+        double balanceAfter = ProfileSteps.userGetBalance(accountId);
 
         assertEquals(balanceBefore, balanceAfter);
     }
 
     @Test
     public void userCannotDepositToNonExistentAccount() {
+
+        double balanceBefore = ProfileSteps.userGetBalance(1);
+
         DepositRequest depositRequest = DepositRequest.builder()
-                .id(10)
+                .id(RandomData.generateNonExistId())
                 .balance(RandomData.generateDepositAmount())
                 .build();
 
@@ -84,5 +96,9 @@ public class UserDepositTest {
                 Endpoint.DEPOSIT,
                 ResponseSpec.requestReturnsForbidden())
                 .post(depositRequest);
+
+        double balanceAfter = ProfileSteps.userGetBalance(1);
+
+        assertEquals(balanceBefore, balanceAfter);
     }
 }

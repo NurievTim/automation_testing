@@ -38,4 +38,8 @@ public class RandomData {
     public static int generateTransferAmount() {
         return faker.number().numberBetween(0, 10000);
     }
+
+    public static int generateNonExistId() {
+        return faker.number().numberBetween(50, 100);
+    }
 }
