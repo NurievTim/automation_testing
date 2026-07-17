@@ -1,4 +1,4 @@
-package iteration_2;
+package iteration_2.api;
 
 import generators.RandomData;
 import models.Customer;
