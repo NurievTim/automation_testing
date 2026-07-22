@@ -63,7 +63,7 @@ public class RandomModelGenerator {
     }
 
     private static Object generateFromRegex(String regex, Class<?> type) {
-        RgxGen rgxGen = new RgxGen(regex);
+        RgxGen rgxGen = RgxGen.parse(regex);
         String result = rgxGen.generate();
         if (type.equals(Integer.class) || type.equals(int.class)) {
             return Integer.parseInt(result);

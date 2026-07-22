@@ -64,11 +64,6 @@
             <version>7.17.0</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>com.github.curious-odd-man</groupId>
-            <artifactId>rgxgen</artifactId>
-            <version>3.1</version>
-        </dependency>
     </dependencies>
 
 </project>
