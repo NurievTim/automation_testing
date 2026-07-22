@@ -10,10 +10,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import requests.skeleton.Endpoint;
 import requests.skeleton.requests.CrudRequester;
-import requests.skeleton.requests.ValidatedCrudRequest;
+import requests.skeleton.requests.ValidatedCrudRequester;
 import requests.steps.ProfileSteps;
 import specs.RequestSpecs;
-import specs.ResponseSpec;
+import specs.ResponseSpecs;
 
 import java.util.stream.Stream;
 
@@ -25,10 +25,10 @@ public class UserDepositTest {
     @ParameterizedTest
     @ValueSource(doubles = {5000, 4999.99, 0.01})
     public void userCanDepositToSelfAccount(double amount) {
-        CustomerResponse customerResponse = new ValidatedCrudRequest<CustomerResponse>(
+        CustomerResponse customerResponse = new ValidatedCrudRequester<CustomerResponse>(
                 RequestSpecs.userSpec(),
                 Endpoint.GET_PROFILE,
-                ResponseSpec.requestReturnsOK())
+                ResponseSpecs.requestReturnsOK())
                 .get();
 
         int accountId = customerResponse.getAccounts().getFirst().getId();
@@ -43,7 +43,7 @@ public class UserDepositTest {
         new CrudRequester(
                 RequestSpecs.userSpec(),
                 Endpoint.DEPOSIT,
-                ResponseSpec.requestReturnsOK())
+                ResponseSpecs.requestReturnsOK())
                 .post(depositRequest);
 
         double balanceAfter = ProfileSteps.userGetBalance(accountId);
@@ -54,8 +54,8 @@ public class UserDepositTest {
 
     public static Stream<Arguments> invalidBalance() {
         return Stream.of(
-                Arguments.of(1, 5000.01, ResponseSpec.DEPOSIT_MAX_LIMIT),
-                Arguments.of(1, 0, ResponseSpec.DEPOSIT_MIN_LIMIT)
+                Arguments.of(1, 5000.01, ResponseSpecs.DEPOSIT_MAX_LIMIT),
+                Arguments.of(1, 0, ResponseSpecs.DEPOSIT_MIN_LIMIT)
         );
     }
 
@@ -73,7 +73,7 @@ public class UserDepositTest {
         new CrudRequester(
                 RequestSpecs.userSpec(),
                 Endpoint.DEPOSIT,
-                ResponseSpec.requestReturnsBadRequest(errorMessage))
+                ResponseSpecs.requestReturnsBadRequest(errorMessage))
                 .post(depositRequest);
 
         double balanceAfter = ProfileSteps.userGetBalance(accountId);
@@ -94,7 +94,7 @@ public class UserDepositTest {
         new CrudRequester(
                 RequestSpecs.userSpec(),
                 Endpoint.DEPOSIT,
-                ResponseSpec.requestReturnsForbidden())
+                ResponseSpecs.requestReturnsForbidden())
                 .post(depositRequest);
 
         double balanceAfter = ProfileSteps.userGetBalance(1);

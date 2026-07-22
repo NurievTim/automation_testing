@@ -10,10 +10,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import requests.skeleton.Endpoint;
 import requests.skeleton.requests.CrudRequester;
-import requests.skeleton.requests.ValidatedCrudRequest;
+import requests.skeleton.requests.ValidatedCrudRequester;
 import requests.steps.ProfileSteps;
 import specs.RequestSpecs;
-import specs.ResponseSpec;
+import specs.ResponseSpecs;
 
 import java.util.stream.Stream;
 
@@ -26,10 +26,10 @@ public class UserTransferTest {
     @ValueSource(doubles = {0.01, 10000, 9999.99})
     public void userCanTransferBetweenTheirAccounts(double amount) {
 
-        CustomerResponse customerResponse = new ValidatedCrudRequest<CustomerResponse>(
+        CustomerResponse customerResponse = new ValidatedCrudRequester<CustomerResponse>(
                 RequestSpecs.userSpec(),
                 Endpoint.GET_PROFILE,
-                ResponseSpec.requestReturnsOK())
+                ResponseSpecs.requestReturnsOK())
                 .get();
 
         int senderAccountId = customerResponse.getAccounts().getFirst().getId();
@@ -45,7 +45,7 @@ public class UserTransferTest {
         new CrudRequester(
                 RequestSpecs.userSpec(),
                 Endpoint.TRANSFER,
-                ResponseSpec.requestReturnsOK(ResponseSpec.SUCCESS_TRANSFER))
+                ResponseSpecs.requestReturnsOK(ResponseSpecs.SUCCESS_TRANSFER))
                 .post(transferRequest);
 
         double balanceAfter = ProfileSteps.userGetBalance(receiverAccountId);
@@ -55,18 +55,18 @@ public class UserTransferTest {
 
     public static Stream<Arguments> invalidAmount() {
         return Stream.of(
-                Arguments.of(0, ResponseSpec.TRANSFER_MIN_LIMIT),
-                Arguments.of(10000.01, ResponseSpec.TRANSFER_MAX_LIMIT)
+                Arguments.of(0, ResponseSpecs.TRANSFER_MIN_LIMIT),
+                Arguments.of(10000.01, ResponseSpecs.TRANSFER_MAX_LIMIT)
         );
     }
 
     @ParameterizedTest
     @MethodSource("invalidAmount")
     public void userCannotTransferInadmissibleAmountBetweenTheirAccounts(double amount, String errorMessage) {
-        CustomerResponse customerResponse = new ValidatedCrudRequest<CustomerResponse>(
+        CustomerResponse customerResponse = new ValidatedCrudRequester<CustomerResponse>(
                 RequestSpecs.userSpec(),
                 Endpoint.GET_PROFILE,
-                ResponseSpec.requestReturnsOK())
+                ResponseSpecs.requestReturnsOK())
                 .get();
 
         int firstId = customerResponse.getAccounts().getFirst().getId();
@@ -83,7 +83,7 @@ public class UserTransferTest {
         new CrudRequester(
                 RequestSpecs.userSpec(),
                 Endpoint.TRANSFER,
-                ResponseSpec.requestReturnsBadRequest(errorMessage))
+                ResponseSpecs.requestReturnsBadRequest(errorMessage))
                 .post(transferRequest);
 
         double balanceAfter = ProfileSteps.userGetBalance(secondId);
@@ -93,18 +93,18 @@ public class UserTransferTest {
 
     @Test
     public void userHasNotEnoughAmountToTransfer() {
-        CustomerResponse firstCustomerResponse = new ValidatedCrudRequest<CustomerResponse>(
+        CustomerResponse firstCustomerResponse = new ValidatedCrudRequester<CustomerResponse>(
                 RequestSpecs.userSpec(),
                 Endpoint.GET_PROFILE,
-                ResponseSpec.requestReturnsOK())
+                ResponseSpecs.requestReturnsOK())
                 .get();
 
         int receiverAccountId = firstCustomerResponse.getAccounts().getFirst().getId();
 
-        CustomerResponse secondCustomerResponse = new ValidatedCrudRequest<CustomerResponse>(
+        CustomerResponse secondCustomerResponse = new ValidatedCrudRequester<CustomerResponse>(
                 RequestSpecs.userEmptyBalanceSpec(),
                 Endpoint.GET_PROFILE,
-                ResponseSpec.requestReturnsOK())
+                ResponseSpecs.requestReturnsOK())
                 .get();
 
         int senderAccountId = secondCustomerResponse.getAccounts().getFirst().getId();
@@ -120,7 +120,7 @@ public class UserTransferTest {
         new CrudRequester(
                 RequestSpecs.userEmptyBalanceSpec(),
                 Endpoint.TRANSFER,
-                ResponseSpec.requestReturnsBadRequest(ResponseSpec.ERROR_TRANSFER))
+                ResponseSpecs.requestReturnsBadRequest(ResponseSpecs.ERROR_TRANSFER))
                 .post(transferRequest);
 
         double balanceAfter = ProfileSteps.userGetBalance(receiverAccountId);
@@ -131,18 +131,18 @@ public class UserTransferTest {
     @Test
     public void userCanTransferToAnotherUser() {
 
-        CustomerResponse firstCustomerResponse = new ValidatedCrudRequest<CustomerResponse>(
+        CustomerResponse firstCustomerResponse = new ValidatedCrudRequester<CustomerResponse>(
                 RequestSpecs.userSpec(),
                 Endpoint.GET_PROFILE,
-                ResponseSpec.requestReturnsOK())
+                ResponseSpecs.requestReturnsOK())
                 .get();
 
         int senderAccountId = firstCustomerResponse.getAccounts().getFirst().getId();
 
-        CustomerResponse secondCustomerResponse = new ValidatedCrudRequest<CustomerResponse>(
+        CustomerResponse secondCustomerResponse = new ValidatedCrudRequester<CustomerResponse>(
                 RequestSpecs.secondUserSpec(),
                 Endpoint.GET_PROFILE,
-                ResponseSpec.requestReturnsOK())
+                ResponseSpecs.requestReturnsOK())
                 .get();
 
         int receiverAccountId = secondCustomerResponse.getAccounts().getFirst().getId();
@@ -157,13 +157,13 @@ public class UserTransferTest {
         new CrudRequester(
                 RequestSpecs.userSpec(),
                 Endpoint.TRANSFER,
-                ResponseSpec.requestReturnsOK(ResponseSpec.SUCCESS_TRANSFER))
+                ResponseSpecs.requestReturnsOK(ResponseSpecs.SUCCESS_TRANSFER))
                 .post(transferRequest);
 
-        CustomerResponse secondCustomerResponseAfter = new ValidatedCrudRequest<CustomerResponse>(
+        CustomerResponse secondCustomerResponseAfter = new ValidatedCrudRequester<CustomerResponse>(
                 RequestSpecs.secondUserSpec(),
                 Endpoint.GET_PROFILE,
-                ResponseSpec.requestReturnsOK())
+                ResponseSpecs.requestReturnsOK())
                 .get();
 
         double balanceAfter = secondCustomerResponseAfter.getAccounts().getFirst().getBalance();

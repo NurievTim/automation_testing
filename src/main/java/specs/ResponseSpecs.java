@@ -6,8 +6,8 @@ import org.apache.http.HttpStatus;
 
 import static org.hamcrest.Matchers.equalTo;
 
-public class ResponseSpec {
-    private ResponseSpec() {}
+public class ResponseSpecs {
+    private ResponseSpecs() {}
 
     private static final String MESSAGE_JSON_PATH = "message";
 
@@ -56,6 +56,12 @@ public class ResponseSpec {
         return defaultResponseBuilder()
                 .expectStatusCode(HttpStatus.SC_FORBIDDEN)
                 .expectBody(equalTo(UNAUTH_MESSAGE))
+                .build();
+    }
+
+    public static  ResponseSpecification entityWasCreated() {
+        return defaultResponseBuilder()
+                .expectStatusCode(HttpStatus.SC_CREATED)
                 .build();
     }
 }

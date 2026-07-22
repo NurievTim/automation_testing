@@ -3,16 +3,16 @@ package requests.steps;
 import models.Accounts;
 import models.CustomerResponse;
 import requests.skeleton.Endpoint;
-import requests.skeleton.requests.ValidatedCrudRequest;
+import requests.skeleton.requests.ValidatedCrudRequester;
 import specs.RequestSpecs;
-import specs.ResponseSpec;
+import specs.ResponseSpecs;
 
 public class ProfileSteps {
     public static double userGetBalance(int accountId) {
-        CustomerResponse customerResponse = new ValidatedCrudRequest<CustomerResponse>(
+        CustomerResponse customerResponse = new ValidatedCrudRequester<CustomerResponse>(
                 RequestSpecs.userSpec(),
                 Endpoint.GET_PROFILE,
-                ResponseSpec.requestReturnsOK())
+                ResponseSpecs.requestReturnsOK())
                 .get();
 
         return customerResponse.getAccounts().stream()

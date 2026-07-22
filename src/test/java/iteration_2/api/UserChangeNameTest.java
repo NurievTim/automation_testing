@@ -10,9 +10,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import requests.skeleton.Endpoint;
 import requests.skeleton.requests.CrudRequester;
-import requests.skeleton.requests.ValidatedCrudRequest;
+import requests.skeleton.requests.ValidatedCrudRequester;
 import specs.RequestSpecs;
-import specs.ResponseSpec;
+import specs.ResponseSpecs;
 
 import java.util.stream.Stream;
 
@@ -26,10 +26,10 @@ public class UserChangeNameTest {
                 .name(RandomData.getValidName())
                 .build();
 
-        Customer customer = new ValidatedCrudRequest<Customer>(
+        Customer customer = new ValidatedCrudRequester<Customer>(
                 RequestSpecs.userSpec(),
                 Endpoint.PUT_PROFILE,
-                ResponseSpec.requestReturnsOK(ResponseSpec.PROFILE_UPDATED_SUCCESSFULLY))
+                ResponseSpecs.requestReturnsOK(ResponseSpecs.PROFILE_UPDATED_SUCCESSFULLY))
                 .put(customerRequest);
 
         CustomerResponse customerResponse = customer.getCustomer();
@@ -57,13 +57,13 @@ public class UserChangeNameTest {
         new CrudRequester(
                 RequestSpecs.userSpec(),
                 Endpoint.PUT_PROFILE,
-                ResponseSpec.requestReturnsBadRequest(ResponseSpec.NAME_VALIDATION_ERROR))
+                ResponseSpecs.requestReturnsBadRequest(ResponseSpecs.NAME_VALIDATION_ERROR))
                 .put(customerRequest);
 
-        CustomerResponse response = new ValidatedCrudRequest<CustomerResponse>(
+        CustomerResponse response = new ValidatedCrudRequester<CustomerResponse>(
                 RequestSpecs.userSpec(),
                 Endpoint.GET_PROFILE,
-                ResponseSpec.requestReturnsOK())
+                ResponseSpecs.requestReturnsOK())
                 .get();
         
         assertNotEquals(response.getName(), invalidName);

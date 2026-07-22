@@ -7,9 +7,9 @@ import requests.skeleton.Endpoint;
 import requests.skeleton.HttpRequest;
 import requests.skeleton.interfaces.CrudEndpointInterface;
 
-public class ValidatedCrudRequest<T extends BaseModel> extends HttpRequest implements CrudEndpointInterface {
+public class ValidatedCrudRequester<T extends BaseModel> extends HttpRequest implements CrudEndpointInterface {
     private CrudRequester crudRequester;
-    public ValidatedCrudRequest(RequestSpecification requestSpecification, Endpoint endpoint, ResponseSpecification responseSpecification) {
+    public ValidatedCrudRequester(RequestSpecification requestSpecification, Endpoint endpoint, ResponseSpecification responseSpecification) {
         super(requestSpecification, endpoint, responseSpecification);
         this.crudRequester = new CrudRequester(requestSpecification, endpoint, responseSpecification);
     }
