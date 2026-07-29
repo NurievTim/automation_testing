@@ -11,7 +11,9 @@ public class RandomData {
     private static final Faker faker = new Faker(Locale.ENGLISH);
 
     public static String getValidName() {
-        return faker.name().firstName() + " " + faker.name().lastName();
+        String firstName = faker.name().firstName().replaceAll("[^a-zA-Z]", "");
+        String lastName = faker.name().lastName().replaceAll("[^a-zA-Z]", "");
+        return firstName + " " + lastName;
     }
 
     public static String generateNameWithNumbers() {
