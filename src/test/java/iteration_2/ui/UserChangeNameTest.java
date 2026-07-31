@@ -68,6 +68,7 @@ public class UserChangeNameTest {
         $(Selectors.byText("\uD83D\uDCBE Save Changes")).click();
         Alert alert = switchTo().alert();
         assertEquals( "✅ Name updated successfully!", alert.getText());
+        alert.accept();
 
         // ШАГ 6: Проверить, что имя сохранилось
         CustomerResponse customerResponse = new ValidatedCrudRequester<CustomerResponse>(
@@ -113,6 +114,7 @@ public class UserChangeNameTest {
         $(Selectors.byText("\uD83D\uDCBE Save Changes")).click();
         Alert alert = switchTo().alert();
         assertEquals( "❌ Please enter a valid name.", alert.getText());
+        alert.accept();
 
         // ШАГ 6: Проверить, что имя не сохранилось
         CustomerResponse customerResponse = new ValidatedCrudRequester<CustomerResponse>(

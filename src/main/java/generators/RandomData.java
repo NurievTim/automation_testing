@@ -34,11 +34,11 @@ public class RandomData {
     }
 
     public static int generateDepositAmount() {
-        return faker.number().numberBetween(0, 5000);
+        return faker.number().numberBetween(1, 5000);
     }
 
     public static int generateTransferAmount() {
-        return faker.number().numberBetween(0, 10000);
+        return faker.number().numberBetween(1, 10000);
     }
 
     public static int generateNonExistId() {

@@ -69,7 +69,7 @@ public class UserDepositTest {
         webdriver().shouldHave(WebDriverConditions.urlContaining("/deposit"));
 
         // ШАГ 5: Юзер нажимает на окно выбора аккаунта "Choose an account" и выбирает в дроп меню аккаунт
-        $(Selectors.byClassName("account-selector")).selectOption(1);
+        $(Selectors.byClassName("account-selector")).selectOptionByValue(String.valueOf(accountResponse.getId()));
 
         // ШАГ 6: Юзер нажимает на окно ввода суммы депозита и вводит валидную сумму
         int depositAmount = RandomData.generateDepositAmount();
@@ -79,6 +79,7 @@ public class UserDepositTest {
         $(Selectors.byTagAndText("button", "\uD83D\uDCB5 Deposit")).click();
         Alert alert = switchTo().alert();
         assertEquals( "✅ Successfully deposited $" + depositAmount + " to account " + accountResponse.getAccountNumber() + "!", alert.getText());
+        alert.accept();
 
         // ШАГ 8: Проверить, что депозит пополнен
         CustomerResponse customerResponse = new ValidatedCrudRequester<CustomerResponse>(
@@ -124,7 +125,7 @@ public class UserDepositTest {
         webdriver().shouldHave(WebDriverConditions.urlContaining("/deposit"));
 
         // ШАГ 5: Юзер нажимает на окно выбора аккаунта "Choose an account" и выбирает в дроп меню аккаунт
-        $(Selectors.byClassName("account-selector")).selectOption(1);
+        $(Selectors.byClassName("account-selector")).selectOptionByValue(String.valueOf(accountResponse.getId()));
 
         // ШАГ 6: Юзер нажимает на окно ввода суммы депозита и вводит невалидную сумму
         $(Selectors.byPlaceholder("Enter amount")).sendKeys(String.valueOf(5001));
@@ -133,6 +134,7 @@ public class UserDepositTest {
         $(Selectors.byTagAndText("button", "\uD83D\uDCB5 Deposit")).click();
         Alert alert = switchTo().alert();
         assertEquals( "❌ Please deposit less or equal to 5000$.", alert.getText());
+        alert.accept();
 
         // ШАГ 8: Проверить, что транзакции не было
         CustomerResponse customerResponse = new ValidatedCrudRequester<CustomerResponse>(
