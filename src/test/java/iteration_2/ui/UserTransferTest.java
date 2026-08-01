@@ -1,41 +1,28 @@
 package iteration_2.ui;
 
-import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.Selectors;
 import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.WebDriverConditions;
-import generators.RandomData;
-import models.CreateAccountResponse;
-import models.CreateUserRequest;
-import models.CustomerResponse;
-import models.DepositRequest;
-import org.junit.jupiter.api.BeforeAll;
+import api.generators.RandomData;
+import api.models.CreateAccountResponse;
+import api.models.CreateUserRequest;
+import api.models.CustomerResponse;
+import api.models.DepositRequest;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Alert;
-import requests.skeleton.Endpoint;
-import requests.skeleton.requests.CrudRequester;
-import requests.skeleton.requests.ValidatedCrudRequester;
-import requests.steps.AdminSteps;
-import specs.RequestSpecs;
-import specs.ResponseSpecs;
+import api.requests.skeleton.Endpoint;
+import api.requests.skeleton.requests.CrudRequester;
+import api.requests.skeleton.requests.ValidatedCrudRequester;
+import api.requests.steps.AdminSteps;
+import api.specs.RequestSpecs;
+import api.specs.ResponseSpecs;
 
-import java.util.Map;
 
 import static com.codeborne.selenide.Selenide.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class UserTransferTest {
-    @BeforeAll
-    public static void setupSelenoid() {
-        Configuration.remote = "http://localhost:4444/wd/hub";
-        Configuration.baseUrl = "http://host.docker.internal:3000";
-        Configuration.browserSize = "1920x1080";
-        Configuration.browser = "chrome";
-        Configuration.browserCapabilities.setCapability(
-                "selenoid:options",
-                Map.of("enableVNC", true, "enableLog", true)
-        );
-    }
+
     @Test
     public void userCanMakeTransfer() {
         // ПРЕДУСЛОВИЯ ЧЕРЕЗ API
