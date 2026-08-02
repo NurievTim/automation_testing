@@ -14,9 +14,14 @@ public class DepositPage extends BasePage<DepositPage>{
     private final SelenideElement amountPlaceholder = $(Selectors.byPlaceholder("Enter amount"));
     private final SelenideElement depositButton = $(Selectors.byTagAndText("button", "\uD83D\uDCB5 Deposit"));
 
-    public DepositPage depositMoney(int amount, long accountId) {
+    public DepositPage fillDepositForm(int amount, long accountId) {
         accountSelector.selectOptionByValue(String.valueOf(accountId));
         amountPlaceholder.sendKeys(String.valueOf(amount));
+        return this;
+    }
+
+    public DepositPage depositMoney(int amount, long accountId) {
+        fillDepositForm(amount, accountId);
         depositButton.click();
         return this;
     }

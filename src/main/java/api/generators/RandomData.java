@@ -45,6 +45,10 @@ public class RandomData {
         return faker.number().numberBetween(1, 10000);
     }
 
+    public static int generateInvalidTransferAmount() {
+        return faker.number().numberBetween(10000, 20000);
+    }
+
     public static int generateNonExistId() {
         return faker.number().numberBetween(50, 100);
     }

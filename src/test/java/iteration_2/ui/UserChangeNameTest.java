@@ -18,6 +18,7 @@ public class UserChangeNameTest extends BaseUiTest {
         CreateUserRequest userRequest = AdminSteps.createUser();
         authAsUser(userRequest);
         String newName = RandomData.getValidName();
+
         new UserDashboardPage()
                 .open()
                 .goToProfilePage()
@@ -35,6 +36,7 @@ public class UserChangeNameTest extends BaseUiTest {
         CreateUserRequest userRequest = AdminSteps.createUser();
         authAsUser(userRequest);
         String newName = RandomData.generateNameWithoutSpace();
+
         new UserDashboardPage()
                 .open()
                 .goToProfilePage()
