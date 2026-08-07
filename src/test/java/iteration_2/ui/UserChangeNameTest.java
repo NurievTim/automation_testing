@@ -1,11 +1,11 @@
 package iteration_2.ui;
 
+import api.configs.SessionStorage;
 import api.requests.steps.UserSteps;
 import api.generators.RandomData;
-import api.models.CreateUserRequest;
 import api.models.CustomerResponse;
+import common.annotations.UserSession;
 import org.junit.jupiter.api.Test;
-import api.requests.steps.AdminSteps;
 import ui.pages.Alerts;
 import ui.pages.UserDashboardPage;
 
@@ -14,9 +14,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class UserChangeNameTest extends BaseUiTest {
 
     @Test
+    @UserSession
     public void userCanChangeName() {
-        CreateUserRequest userRequest = AdminSteps.createUser();
-        authAsUser(userRequest);
         String newName = RandomData.getValidName();
 
         new UserDashboardPage()
@@ -26,15 +25,14 @@ public class UserChangeNameTest extends BaseUiTest {
                 .checkAlertMessageAndAccept(
                         Alerts.NAME_UPDATED_SUCCESSFULLY.getMessage()
                 );
-        CustomerResponse userProfile = UserSteps.getUserProfile(userRequest);
+        CustomerResponse userProfile = UserSteps.getUserProfile(SessionStorage.getUser());
 
         assertThat(userProfile.getName()).isEqualTo(newName);
     }
 
     @Test
+    @UserSession
     public void userCannotChangeName() {
-        CreateUserRequest userRequest = AdminSteps.createUser();
-        authAsUser(userRequest);
         String newName = RandomData.generateNameWithoutSpace();
 
         new UserDashboardPage()
@@ -44,7 +42,7 @@ public class UserChangeNameTest extends BaseUiTest {
                 .checkAlertMessageAndAccept(
                         Alerts.NAME_MUST_CONTAINS.getMessage()
                 );
-        CustomerResponse userProfile = UserSteps.getUserProfile(userRequest);
+        CustomerResponse userProfile = UserSteps.getUserProfile(SessionStorage.getUser());
 
         assertThat(userProfile.getName()).isNotEqualTo(newName);
     }
