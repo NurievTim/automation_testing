@@ -1,11 +1,10 @@
 package iteration_2.ui;
 
 import api.configs.SessionStorage;
-import api.requests.steps.UserSteps;
 import api.generators.RandomData;
 import api.models.CreateAccountResponse;
-import api.models.CreateUserRequest;
 import api.models.CustomerResponse;
+import api.requests.steps.UserSteps;
 import common.annotations.UserSession;
 import org.junit.jupiter.api.Test;
 import ui.pages.Alerts;
