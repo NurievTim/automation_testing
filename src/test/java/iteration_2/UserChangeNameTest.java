@@ -14,6 +14,7 @@ import specs.ResponseSpec;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class UserChangeNameTest {
 
@@ -30,7 +31,15 @@ public class UserChangeNameTest {
                 .assertThat()
                 .extract().as(Customer.class).getCustomer();
 
+        CustomerResponse customerResponseProfile = new CustomerRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsOK())
+                .get()
+                .assertThat()
+                .extract().as(CustomerResponse.class);
+
         assertEquals(customerRequest.getName(), customerResponse.getName());
+        assertEquals(customerRequest.getName(), customerResponseProfile.getName());
     }
 
     static Stream<String> invalidNameProvider() {
@@ -53,5 +62,14 @@ public class UserChangeNameTest {
                 RequestSpecs.userSpec(),
                 ResponseSpec.requestReturnsBadRequest(ResponseSpec.NAME_VALIDATION_ERROR))
                 .put(customerRequest);
+
+        CustomerResponse customerResponseProfile = new CustomerRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsOK())
+                .get()
+                .assertThat()
+                .extract().as(CustomerResponse.class);
+
+        assertNotEquals(customerRequest.getName(), customerResponseProfile.getName());
     }
 }
