@@ -1,243 +1,179 @@
 package iteration_2;
 
-import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.http.ContentType;
-import io.restassured.response.Response;
-import org.apache.http.HttpStatus;
-import org.junit.jupiter.api.BeforeAll;
+import generators.RandomData;
+import models.Accounts;
+import models.CustomerResponse;
+import models.TransferRequest;
 import org.junit.jupiter.api.Test;
-import org.json.JSONObject;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import requests.CustomerRequester;
+import requests.TransferRequester;
+import specs.RequestSpecs;
+import specs.ResponseSpec;
 
-import java.util.List;
+import java.util.stream.Stream;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UserTransferTest {
-    final String AUTH = "Basic dGVzdFVzZXIxOnRlc3RVc2VyMSQ=";
-    final String AUTH2 = "Basic dGVzdFVzZXIyOnRlc3RVc2VyMiQ=";
-    final String AUTH3 = "Basic YWRtaW46YWRtaW4=";
-
-    @BeforeAll
-    public static void setupRestAssured() {
-        RestAssured.filters(List.of(new RequestLoggingFilter(), new ResponseLoggingFilter()));
-    }
 
     @ParameterizedTest
-    @ValueSource(doubles = {0.01, 9999.99, 10000})
+    @ValueSource(doubles = {0.01, 10000, 9999.99})
     public void userCanTransferBetweenTheirAccounts(double amount) {
-        RestAssured.baseURI = "http://localhost:4111/api/v1";
-        JSONObject requestBody = new JSONObject()
-                .put("amount", amount)
-                .put("receiverAccountId", 2)
-                .put("senderAccountId", 1);
 
-        Response beforeTransfer = given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .when()
-                .get("/customer/profile");
+        double balanceBefore = new CustomerRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsOK())
+                .get()
+                .extract()
+                .as(CustomerResponse.class)
+                .getAccounts()
+                .get(1)
+                .getBalance();
 
-        float senderBalance = beforeTransfer.path("accounts[0].balance");
-        float receiverBalance = beforeTransfer.path("accounts[1].balance");
+        TransferRequest transferRequest = TransferRequest.builder()
+                .amount(amount)
+                .senderAccountId(1)
+                .receiverAccountId(2)
+                .build();
 
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .body(requestBody.toString())
-                .when()
-                .post("/accounts/transfer")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("message", equalTo("Transfer successful"))
-                .body("amount", equalTo((float) amount));
+        new TransferRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsOK(ResponseSpec.SUCCESS_TRANSFER))
+                .post(transferRequest);
 
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .when()
-                .get("/customer/profile")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("accounts[0].balance", equalTo((float) (senderBalance - amount)))
-                .body("accounts[1].balance", equalTo((float) (receiverBalance + amount)));
+        double balanceAfter = new CustomerRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsOK())
+                .get()
+                .extract()
+                .as(CustomerResponse.class)
+                .getAccounts()
+                .get(1)
+                .getBalance();
+
+        assertTrue(balanceBefore < balanceAfter);
+    }
+
+    public static Stream<Arguments> invalidAmount() {
+        return Stream.of(
+                Arguments.of(0, ResponseSpec.TRANSFER_MIN_LIMIT),
+                Arguments.of(10000.01, ResponseSpec.TRANSFER_MAX_LIMIT)
+        );
     }
 
     @ParameterizedTest
-    @ValueSource(doubles = {0, 10000.01})
-    public void userCannotTransferInadmissibleAmountBetweenTheirAccounts(double amount) {
-        RestAssured.baseURI = "http://localhost:4111/api/v1";
-        JSONObject requestBody = new JSONObject()
-                .put("amount", amount)
-                .put("receiverAccountId", 2)
-                .put("senderAccountId", 1);
+    @MethodSource("invalidAmount")
+    public void userCannotTransferInadmissibleAmountBetweenTheirAccounts(double amount, String errorMessage) {
 
-        Response beforeTransfer = given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .when()
-                .get("/customer/profile");
+        double balanceBefore = new CustomerRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsOK())
+                .get()
+                .extract()
+                .as(CustomerResponse.class)
+                .getAccounts()
+                .get(1)
+                .getBalance();
 
-        float senderBalance = beforeTransfer.path("accounts[0].balance");
-        float receiverBalance = beforeTransfer.path("accounts[1].balance");
+        TransferRequest transferRequest = TransferRequest.builder()
+                .amount(amount)
+                .senderAccountId(1)
+                .receiverAccountId(2)
+                .build();
 
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .body(requestBody.toString())
-                .when()
-                .post("/accounts/transfer")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST);
+        new TransferRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsBadRequest(errorMessage))
+                .post(transferRequest);
 
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .when()
-                .get("/customer/profile")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("accounts[0].balance", equalTo(senderBalance))
-                .body("accounts[1].balance", equalTo(receiverBalance));
+        double balanceAfter = new CustomerRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsOK())
+                .get()
+                .extract()
+                .as(CustomerResponse.class)
+                .getAccounts()
+                .get(1)
+                .getBalance();
+
+        assertEquals(balanceBefore, balanceAfter);
     }
 
     @Test
     public void userHasNotEnoughAmountToTransfer() {
-        RestAssured.baseURI = "http://localhost:4111/api/v1";
-        JSONObject requestBody = new JSONObject()
-                .put("amount", 5000)
-                .put("receiverAccountId", 1)
-                .put("senderAccountId", 4);
 
-        float senderBalance = given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH3)
-                .when()
-                .get("/customer/profile")
-                .then()
+        Accounts account = new CustomerRequester(
+                RequestSpecs.userEmptyBalanceSpec(),
+                ResponseSpec.requestReturnsOK())
+                .get()
                 .extract()
-                .path("accounts[0].balance");
+                .as(CustomerResponse.class)
+                .getAccounts()
+                .getFirst();
 
-        float receiverBalance = given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .when()
-                .get("/customer/profile")
-                .then()
+        TransferRequest transferRequest = TransferRequest.builder()
+                .amount(RandomData.generateTransferAmount())
+                .senderAccountId(account.getId())
+                .receiverAccountId(1)
+                .build();
+
+        new TransferRequester(
+                RequestSpecs.userEmptyBalanceSpec(),
+                ResponseSpec.requestReturnsBadRequest(ResponseSpec.ERROR_TRANSFER))
+                .post(transferRequest);
+
+        double balanceAfter = new CustomerRequester(
+                RequestSpecs.userEmptyBalanceSpec(),
+                ResponseSpec.requestReturnsOK())
+                .get()
                 .extract()
-                .path("accounts[1].balance");
+                .as(CustomerResponse.class)
+                .getAccounts()
+                .getFirst()
+                .getBalance();
 
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .body(requestBody.toString())
-                .when()
-                .post("/accounts/transfer")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(equalTo("Invalid transfer: insufficient funds or invalid accounts"));
-
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH3)
-                .when()
-                .get("/customer/profile")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("accounts[0].balance", equalTo(senderBalance));
-
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .when()
-                .get("/customer/profile")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("accounts[0].balance", equalTo(receiverBalance));
+        assertEquals(account.getBalance(), balanceAfter);
     }
 
     @Test
     public void userCanTransferToAnotherUser() {
-        RestAssured.baseURI = "http://localhost:4111/api/v1";
-        JSONObject requestBody = new JSONObject()
-                .put("amount", 100)
-                .put("receiverAccountId", 3)
-                .put("senderAccountId", 1);
 
-        float senderBalance = given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .when()
-                .get("/customer/profile")
-                .then()
+        double balanceBefore = new CustomerRequester(
+                RequestSpecs.secondUserSpec(),
+                ResponseSpec.requestReturnsOK())
+                .get()
                 .extract()
-                .path("accounts[0].balance");
+                .as(CustomerResponse.class)
+                .getAccounts()
+                .getFirst()
+                .getBalance();
 
-        float receiverBalance = given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH2)
-                .when()
-                .get("/customer/profile")
-                .then()
+        TransferRequest transferRequest = TransferRequest.builder()
+                .amount(RandomData.generateTransferAmount())
+                .senderAccountId(1)
+                .receiverAccountId(3)
+                .build();
+
+        new TransferRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsOK(ResponseSpec.SUCCESS_TRANSFER))
+                .post(transferRequest);
+
+        double balanceAfter = new CustomerRequester(
+                RequestSpecs.secondUserSpec(),
+                ResponseSpec.requestReturnsOK())
+                .get()
                 .extract()
-                .path("accounts[0].balance");
+                .as(CustomerResponse.class)
+                .getAccounts()
+                .getFirst()
+                .getBalance();
 
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .body(requestBody.toString())
-                .when()
-                .post("/accounts/transfer")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("message", equalTo("Transfer successful"));
-
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .when()
-                .get("/customer/profile")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("accounts[0].balance", equalTo(senderBalance - 100F));
-
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH2)
-                .when()
-                .get("/customer/profile")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("accounts[0].balance", equalTo(receiverBalance + 100F));
+        assertTrue(balanceBefore < balanceAfter);
     }
 }

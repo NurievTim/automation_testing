@@ -1,87 +1,75 @@
 package iteration_2;
 
-import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.http.ContentType;
-import org.apache.http.HttpStatus;
-import org.json.JSONObject;
-import org.junit.jupiter.api.BeforeAll;
+import generators.RandomData;
+import models.Customer;
+import models.CustomerRequest;
+import models.CustomerResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import requests.CustomerRequester;
+import specs.RequestSpecs;
+import specs.ResponseSpec;
 
-import java.util.List;
+import java.util.stream.Stream;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class UserChangeNameTest {
-    final String AUTH = "Basic dGVzdFVzZXIxOnRlc3RVc2VyMSQ=";
-
-    @BeforeAll
-    public static void setupRestAssured(){
-        RestAssured.filters(List.of(new RequestLoggingFilter(), new ResponseLoggingFilter()));
-    }
 
     @Test
     public void userCanChangeName() {
-        RestAssured.baseURI = "http://localhost:4111/api/v1";
-        JSONObject requestBody = new JSONObject().put("name", "Paul Newman");
+        CustomerRequest customerRequest = CustomerRequest.builder()
+                .name(RandomData.getValidName())
+                .build();
 
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .body(requestBody.toString())
-                .when()
-                .put("/customer/profile")
-                .then()
+        CustomerResponse customerResponse = new CustomerRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsOK(ResponseSpec.PROFILE_UPDATED_SUCCESSFULLY))
+                .put(customerRequest)
                 .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("customer.name", equalTo("Paul Newman"))
-                .body("message", equalTo("Profile updated successfully"));
+                .extract().as(Customer.class).getCustomer();
 
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .when()
-                .get("/customer/profile")
-                .then()
+        CustomerResponse customerResponseProfile = new CustomerRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsOK())
+                .get()
                 .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("name", equalTo("Paul Newman"));
+                .extract().as(CustomerResponse.class);
+
+        assertEquals(customerRequest.getName(), customerResponse.getName());
+        assertEquals(customerRequest.getName(), customerResponseProfile.getName());
+    }
+
+    static Stream<String> invalidNameProvider() {
+        return Stream.of(
+                RandomData.generateNameWithNumbers(),
+                RandomData.generateNameWithoutSpace(),
+                RandomData.generateSingleWord(),
+                RandomData.generateOnlySpaces()
+        );
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"Ne1w 3Name", "NewName", "Name"})
-    public void userCannotPutInvalidName(String name) {
-        RestAssured.baseURI = "http://localhost:4111/api/v1";
-        JSONObject requestBody = new JSONObject().put("name", name);
+    @MethodSource("invalidNameProvider")
+    public void userCannotPutInvalidName(String invalidName) {
+        CustomerRequest customerRequest = CustomerRequest.builder()
+                .name(invalidName)
+                .build();
 
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .body(requestBody.toString())
-                .when()
-                .put("/customer/profile")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(equalTo("Name must contain two words with letters only"));
+        new CustomerRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsBadRequest(ResponseSpec.NAME_VALIDATION_ERROR))
+                .put(customerRequest);
 
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", AUTH)
-                .when()
-                .get("/customer/profile")
-                .then()
+        CustomerResponse customerResponseProfile = new CustomerRequester(
+                RequestSpecs.userSpec(),
+                ResponseSpec.requestReturnsOK())
+                .get()
                 .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("name", not(equalTo(name)));
+                .extract().as(CustomerResponse.class);
+
+        assertNotEquals(customerRequest.getName(), customerResponseProfile.getName());
     }
 }
