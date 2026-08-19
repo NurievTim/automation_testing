@@ -4,17 +4,19 @@ import generators.RandomData;
 import models.Customer;
 import models.CustomerRequest;
 import models.CustomerResponse;
+import models.comparison.ModelAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.CustomerRequester;
+import requests.skeleton.Endpoint;
+import requests.skeleton.requests.CrudRequester;
+import requests.skeleton.requests.ValidatedCrudRequest;
 import specs.RequestSpecs;
 import specs.ResponseSpec;
 
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UserChangeNameTest {
 
@@ -24,22 +26,16 @@ public class UserChangeNameTest {
                 .name(RandomData.getValidName())
                 .build();
 
-        CustomerResponse customerResponse = new CustomerRequester(
+        Customer customer = new ValidatedCrudRequest<Customer>(
                 RequestSpecs.userSpec(),
+                Endpoint.PUT_PROFILE,
                 ResponseSpec.requestReturnsOK(ResponseSpec.PROFILE_UPDATED_SUCCESSFULLY))
-                .put(customerRequest)
-                .assertThat()
-                .extract().as(Customer.class).getCustomer();
+                .put(customerRequest);
 
-        CustomerResponse customerResponseProfile = new CustomerRequester(
-                RequestSpecs.userSpec(),
-                ResponseSpec.requestReturnsOK())
-                .get()
-                .assertThat()
-                .extract().as(CustomerResponse.class);
+        CustomerResponse customerResponse = customer.getCustomer();
 
-        assertEquals(customerRequest.getName(), customerResponse.getName());
-        assertEquals(customerRequest.getName(), customerResponseProfile.getName());
+
+        ModelAssertions.assertThatModels(customerRequest, customerResponse).match();
     }
 
     static Stream<String> invalidNameProvider() {
@@ -58,18 +54,18 @@ public class UserChangeNameTest {
                 .name(invalidName)
                 .build();
 
-        new CustomerRequester(
+        new CrudRequester(
                 RequestSpecs.userSpec(),
+                Endpoint.PUT_PROFILE,
                 ResponseSpec.requestReturnsBadRequest(ResponseSpec.NAME_VALIDATION_ERROR))
                 .put(customerRequest);
 
-        CustomerResponse customerResponseProfile = new CustomerRequester(
+        CustomerResponse response = new ValidatedCrudRequest<CustomerResponse>(
                 RequestSpecs.userSpec(),
+                Endpoint.GET_PROFILE,
                 ResponseSpec.requestReturnsOK())
-                .get()
-                .assertThat()
-                .extract().as(CustomerResponse.class);
-
-        assertNotEquals(customerRequest.getName(), customerResponseProfile.getName());
+                .get();
+        
+        assertNotEquals(response.getName(), invalidName);
     }
 }
