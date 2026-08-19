@@ -1,13 +1,14 @@
 package api.specs;
+
 import api.configs.Config;
+import api.models.LoginUserRequest;
+import api.requests.skeleton.Endpoint;
+import api.requests.skeleton.requests.CrudRequester;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
-import api.models.LoginUserRequest;
-import api.requests.skeleton.Endpoint;
-import api.requests.skeleton.requests.CrudRequester;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,24 +28,6 @@ public class RequestSpecs {
 
     public static RequestSpecification unauthSpec() {
         return defaultRequestBuilder().build();
-    }
-
-    public static RequestSpecification userSpec() {
-        return defaultRequestBuilder()
-                .addHeader("Authorization", "Basic dGVzdFVzZXIxOnRlc3RVc2VyMSQ=")
-                .build();
-    }
-
-    public static RequestSpecification userEmptyBalanceSpec() {
-        return defaultRequestBuilder()
-                .addHeader("Authorization", "Basic dGVzdFVzZXIzOnRlc3RVc2VyMyQ=")
-                .build();
-    }
-
-    public static RequestSpecification secondUserSpec() {
-        return defaultRequestBuilder()
-                .addHeader("Authorization", "Basic dGVzdFVzZXIyOnRlc3RVc2VyMiQ=")
-                .build();
     }
 
     public static RequestSpecification adminSpec() {
