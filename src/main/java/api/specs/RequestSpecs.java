@@ -30,24 +30,6 @@ public class RequestSpecs {
         return defaultRequestBuilder().build();
     }
 
-    public static RequestSpecification userSpec() {
-        return defaultRequestBuilder()
-                .addHeader("Authorization", "Basic OXkxbGlMR2hqRjU6S0ZVYWlqcTQyNiQm")
-                .build();
-    }
-
-    public static RequestSpecification userEmptyBalanceSpec() {
-        return defaultRequestBuilder()
-                .addHeader("Authorization", "Basic dGVzdFVzZXIzOnRlc3RVc2VyMyQ=")
-                .build();
-    }
-
-    public static RequestSpecification secondUserSpec() {
-        return defaultRequestBuilder()
-                .addHeader("Authorization", "Basic dGVzdFVzZXIyOnRlc3RVc2VyMiQ=")
-                .build();
-    }
-
     public static RequestSpecification adminSpec() {
         return defaultRequestBuilder()
                 .addHeader("Authorization", authHeaders.get("admin"))
