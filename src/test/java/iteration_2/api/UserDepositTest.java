@@ -1,19 +1,19 @@
 package iteration_2.api;
 
-import generators.RandomData;
-import models.CustomerResponse;
-import models.DepositRequest;
+import api.generators.RandomData;
+import api.models.CustomerResponse;
+import api.models.DepositRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import requests.skeleton.Endpoint;
-import requests.skeleton.requests.CrudRequester;
-import requests.skeleton.requests.ValidatedCrudRequester;
-import requests.steps.ProfileSteps;
-import specs.RequestSpecs;
-import specs.ResponseSpecs;
+import api.requests.skeleton.Endpoint;
+import api.requests.skeleton.requests.CrudRequester;
+import api.requests.skeleton.requests.ValidatedCrudRequester;
+import api.requests.steps.ProfileSteps;
+import api.specs.RequestSpecs;
+import api.specs.ResponseSpecs;
 
 import java.util.stream.Stream;
 

@@ -1,18 +1,18 @@
 package iteration_2.api;
 
-import generators.RandomData;
-import models.Customer;
-import models.CustomerRequest;
-import models.CustomerResponse;
-import models.comparison.ModelAssertions;
+import api.generators.RandomData;
+import api.models.Customer;
+import api.models.CustomerRequest;
+import api.models.CustomerResponse;
+import api.models.comparison.ModelAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.skeleton.Endpoint;
-import requests.skeleton.requests.CrudRequester;
-import requests.skeleton.requests.ValidatedCrudRequester;
-import specs.RequestSpecs;
-import specs.ResponseSpecs;
+import api.requests.skeleton.Endpoint;
+import api.requests.skeleton.requests.CrudRequester;
+import api.requests.skeleton.requests.ValidatedCrudRequester;
+import api.specs.RequestSpecs;
+import api.specs.ResponseSpecs;
 
 import java.util.stream.Stream;
 
@@ -33,7 +33,6 @@ public class UserChangeNameTest {
                 .put(customerRequest);
 
         CustomerResponse customerResponse = customer.getCustomer();
-
 
         ModelAssertions.assertThatModels(customerRequest, customerResponse).match();
     }
