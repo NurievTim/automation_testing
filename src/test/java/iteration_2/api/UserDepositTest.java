@@ -59,21 +59,21 @@ public class UserDepositTest {
 
     public static Stream<Arguments> invalidBalance() {
         return Stream.of(
-                Arguments.of(1, 5000.01, ResponseSpecs.DEPOSIT_MAX_LIMIT),
-                Arguments.of(1, 0, ResponseSpecs.DEPOSIT_MIN_LIMIT)
+                Arguments.of( 5000.01, ResponseSpecs.DEPOSIT_MAX_LIMIT),
+                Arguments.of( 0, ResponseSpecs.DEPOSIT_MIN_LIMIT)
         );
     }
 
     @ParameterizedTest
     @MethodSource("invalidBalance")
-    public void userCannotDepositInadmissibleAmountToSelfAccount(int accountId, double amount, String errorMessage) {
+    public void userCannotDepositInadmissibleAmountToSelfAccount(double amount, String errorMessage) {
         CreateUserRequest userRequest = AdminSteps.createUser();
-        UserSteps.createUserAccount(userRequest);
+        int userAccount = (int) UserSteps.createUserAccount(userRequest).getId();
 
-        double balanceBefore = ProfileSteps.userGetBalance(accountId, userRequest);
+        double balanceBefore = ProfileSteps.userGetBalance(userAccount, userRequest);
 
         DepositRequest depositRequest = DepositRequest.builder()
-                .id(accountId)
+                .id(userAccount)
                 .balance(amount)
                 .build();
 
@@ -83,7 +83,7 @@ public class UserDepositTest {
                 ResponseSpecs.requestReturnsBadRequest(errorMessage))
                 .post(depositRequest);
 
-        double balanceAfter = ProfileSteps.userGetBalance(accountId, userRequest);
+        double balanceAfter = ProfileSteps.userGetBalance(userAccount, userRequest);
 
         assertEquals(balanceBefore, balanceAfter);
     }
@@ -91,9 +91,9 @@ public class UserDepositTest {
     @Test
     public void userCannotDepositToNonExistentAccount() {
         CreateUserRequest userRequest = AdminSteps.createUser();
-        UserSteps.createUserAccount(userRequest);
+        int userAccount = (int) UserSteps.createUserAccount(userRequest).getId();
 
-        double balanceBefore = ProfileSteps.userGetBalance(1, userRequest);
+        double balanceBefore = ProfileSteps.userGetBalance(userAccount, userRequest);
 
         DepositRequest depositRequest = DepositRequest.builder()
                 .id(RandomData.generateNonExistId())
@@ -106,7 +106,7 @@ public class UserDepositTest {
                 ResponseSpecs.requestReturnsForbidden())
                 .post(depositRequest);
 
-        double balanceAfter = ProfileSteps.userGetBalance(1, userRequest);
+        double balanceAfter = ProfileSteps.userGetBalance(userAccount, userRequest);
 
         assertEquals(balanceBefore, balanceAfter);
     }
