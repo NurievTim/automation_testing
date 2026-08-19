@@ -1,10 +1,13 @@
 package iteration_2.ui;
 
-import api.models.*;
-import api.requests.steps.UserSteps;
+import api.configs.SessionStorage;
 import api.generators.RandomData;
+import api.models.CreateAccountResponse;
+import api.models.CreateUserRequest;
+import api.models.CustomerResponse;
+import api.requests.steps.UserSteps;
+import common.annotations.UserSession;
 import org.junit.jupiter.api.Test;
-import api.requests.steps.AdminSteps;
 import ui.pages.Alerts;
 import ui.pages.UserDashboardPage;
 
@@ -13,15 +16,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class UserTransferTest extends BaseUiTest {
 
     @Test
+    @UserSession
     public void userCanMakeTransfer() {
-        CreateUserRequest userRequest = AdminSteps.createUser();
-        authAsUser(userRequest);
-        CreateAccountResponse firstUserAccount = UserSteps.createUserAccount(userRequest);
-        CreateAccountResponse secondUserAccount = UserSteps.createUserAccount(userRequest);
+        CreateUserRequest user = SessionStorage.getUser();
+        CreateAccountResponse firstUserAccount = UserSteps.createUserAccount(user);
+        CreateAccountResponse secondUserAccount = UserSteps.createUserAccount(user);
 
         int transferAmount = RandomData.generateDepositAmount();
 
-        UserSteps.makeDeposit(userRequest, firstUserAccount.getId(), transferAmount);
+        UserSteps.makeDeposit(SessionStorage.getUser(), firstUserAccount.getId(), transferAmount);
 
         new UserDashboardPage()
                 .open()
@@ -30,7 +33,7 @@ public class UserTransferTest extends BaseUiTest {
                 .checkAlertMessageAndAccept(Alerts.SUCCESS_TRANSFER
                         .getMessage(transferAmount, secondUserAccount.getAccountNumber()));
 
-        CustomerResponse userProfile = UserSteps.getUserProfile(userRequest);
+        CustomerResponse userProfile = UserSteps.getUserProfile(user);
 
         double secondAccountBalance = userProfile.getAccounts().stream()
                 .filter(acc -> acc.getId() == secondUserAccount.getId())
@@ -42,11 +45,11 @@ public class UserTransferTest extends BaseUiTest {
     }
 
     @Test
+    @UserSession
     public void userCannotMakeTransferWithInvalidAmount() {
-        CreateUserRequest userRequest = AdminSteps.createUser();
-        authAsUser(userRequest);
-        CreateAccountResponse firstUserAccount = UserSteps.createUserAccount(userRequest);
-        CreateAccountResponse secondUserAccount = UserSteps.createUserAccount(userRequest);
+        CreateUserRequest user = SessionStorage.getUser();
+        CreateAccountResponse firstUserAccount = UserSteps.createUserAccount(user);
+        CreateAccountResponse secondUserAccount = UserSteps.createUserAccount(user);
 
         int transferAmount = RandomData.generateInvalidTransferAmount();
 
@@ -56,7 +59,7 @@ public class UserTransferTest extends BaseUiTest {
                 .makeTransfer(firstUserAccount.getId(), secondUserAccount.getAccountNumber(), transferAmount)
                 .checkAlertMessageAndAccept(Alerts.TRANSFER_AMOUNT_CANNOT_EXCEED_10000.getMessage());
 
-        CustomerResponse userProfile = UserSteps.getUserProfile(userRequest);
+        CustomerResponse userProfile = UserSteps.getUserProfile(user);
 
         double secondAccountBalance = userProfile.getAccounts().stream()
                 .filter(acc -> acc.getId() == secondUserAccount.getId())
@@ -68,15 +71,15 @@ public class UserTransferTest extends BaseUiTest {
     }
 
     @Test
+    @UserSession
     public void userCannotMakeTransferNotConfirmed() {
-        CreateUserRequest userRequest = AdminSteps.createUser();
-        authAsUser(userRequest);
-        CreateAccountResponse firstUserAccount = UserSteps.createUserAccount(userRequest);
-        CreateAccountResponse secondUserAccount = UserSteps.createUserAccount(userRequest);
+        CreateUserRequest user = SessionStorage.getUser();
+        CreateAccountResponse firstUserAccount = UserSteps.createUserAccount(user);
+        CreateAccountResponse secondUserAccount = UserSteps.createUserAccount(user);
 
         int transferAmount = RandomData.generateDepositAmount();
 
-        UserSteps.makeDeposit(userRequest, firstUserAccount.getId(), transferAmount);
+        UserSteps.makeDeposit(user, firstUserAccount.getId(), transferAmount);
 
         new UserDashboardPage()
                 .open()
@@ -85,7 +88,7 @@ public class UserTransferTest extends BaseUiTest {
                 .submitTransfer()
                 .checkAlertMessageAndAccept(Alerts.FILL_ALL_FIELDS_AND_CONFIRM.getMessage());
 
-        CustomerResponse userProfile = UserSteps.getUserProfile(userRequest);
+        CustomerResponse userProfile = UserSteps.getUserProfile(user);
 
         double secondAccountBalance = userProfile.getAccounts().stream()
                 .filter(acc -> acc.getId() == secondUserAccount.getId())

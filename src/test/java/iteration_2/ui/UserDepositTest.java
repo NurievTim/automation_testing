@@ -1,12 +1,12 @@
 package iteration_2.ui;
 
-import api.requests.steps.UserSteps;
+import api.configs.SessionStorage;
 import api.generators.RandomData;
 import api.models.CreateAccountResponse;
-import api.models.CreateUserRequest;
 import api.models.CustomerResponse;
+import api.requests.steps.UserSteps;
+import common.annotations.UserSession;
 import org.junit.jupiter.api.Test;
-import api.requests.steps.AdminSteps;
 import ui.pages.Alerts;
 import ui.pages.UserDashboardPage;
 
@@ -15,10 +15,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class UserDepositTest extends BaseUiTest{
 
     @Test
+    @UserSession
     public void userCanMakeDeposit() {
-        CreateUserRequest userRequest = AdminSteps.createUser();
-        authAsUser(userRequest);
-        CreateAccountResponse userAccount = UserSteps.createUserAccount(userRequest);
+        CreateAccountResponse userAccount = UserSteps.createUserAccount(SessionStorage.getUser());
         int depositAmount = RandomData.generateDepositAmount();
         new UserDashboardPage()
                 .open()
@@ -28,16 +27,15 @@ public class UserDepositTest extends BaseUiTest{
                         Alerts.SUCCESS_DEPOSIT.getMessage(depositAmount, userAccount.getAccountNumber())
                 );
 
-        CustomerResponse userProfile = UserSteps.getUserProfile(userRequest);
+        CustomerResponse userProfile = UserSteps.getUserProfile(SessionStorage.getUser());
 
         assertThat(userProfile.getAccounts().getFirst().getBalance()).isEqualTo(depositAmount);
     }
 
     @Test
+    @UserSession
     public void userCannotMakeDeposit() {
-        CreateUserRequest userRequest = AdminSteps.createUser();
-        authAsUser(userRequest);
-        CreateAccountResponse userAccount = UserSteps.createUserAccount(userRequest);
+        CreateAccountResponse userAccount = UserSteps.createUserAccount(SessionStorage.getUser());
         int invalidDepositAmount = RandomData.generateInvalidDepositAmount();
         new UserDashboardPage()
                 .open()
@@ -47,7 +45,7 @@ public class UserDepositTest extends BaseUiTest{
                         Alerts.DEPOSIT_LESS_OR_EQUAL_5000.getMessage()
                 );
 
-        CustomerResponse userProfile = UserSteps.getUserProfile(userRequest);
+        CustomerResponse userProfile = UserSteps.getUserProfile(SessionStorage.getUser());
 
         assertThat(userProfile.getAccounts().getFirst().getBalance()).isZero();
     }
