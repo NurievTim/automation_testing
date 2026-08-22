@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class UserDepositTest {
+public class UserDepositTest extends BaseTest {
 
     @ParameterizedTest
     @ValueSource(doubles = {5000, 4999.99, 0.01})
