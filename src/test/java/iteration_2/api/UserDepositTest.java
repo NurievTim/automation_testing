@@ -1,39 +1,44 @@
 package iteration_2.api;
 
 import api.generators.RandomData;
+import api.models.CreateUserRequest;
 import api.models.CustomerResponse;
 import api.models.DepositRequest;
+import api.requests.skeleton.Endpoint;
+import api.requests.skeleton.requests.CrudRequester;
+import api.requests.skeleton.requests.ValidatedCrudRequester;
+import api.requests.steps.AdminSteps;
+import api.requests.steps.ProfileSteps;
+import api.requests.steps.UserSteps;
+import api.specs.RequestSpecs;
+import api.specs.ResponseSpecs;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import api.requests.skeleton.Endpoint;
-import api.requests.skeleton.requests.CrudRequester;
-import api.requests.skeleton.requests.ValidatedCrudRequester;
-import api.requests.steps.ProfileSteps;
-import api.specs.RequestSpecs;
-import api.specs.ResponseSpecs;
 
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class UserDepositTest {
+public class UserDepositTest extends BaseTest {
 
     @ParameterizedTest
     @ValueSource(doubles = {5000, 4999.99, 0.01})
     public void userCanDepositToSelfAccount(double amount) {
+        CreateUserRequest userRequest = AdminSteps.createUser();
+        UserSteps.createUserAccount(userRequest);
         CustomerResponse customerResponse = new ValidatedCrudRequester<CustomerResponse>(
-                RequestSpecs.userSpec(),
+                RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
                 Endpoint.GET_PROFILE,
                 ResponseSpecs.requestReturnsOK())
                 .get();
 
         int accountId = customerResponse.getAccounts().getFirst().getId();
 
-        double balanceBefore = ProfileSteps.userGetBalance(accountId);
+        double balanceBefore = ProfileSteps.userGetBalance(accountId, userRequest);
 
         DepositRequest depositRequest = DepositRequest.builder()
                 .id(accountId)
@@ -41,12 +46,12 @@ public class UserDepositTest {
                 .build();
 
         new CrudRequester(
-                RequestSpecs.userSpec(),
+                RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
                 Endpoint.DEPOSIT,
                 ResponseSpecs.requestReturnsOK())
                 .post(depositRequest);
 
-        double balanceAfter = ProfileSteps.userGetBalance(accountId);
+        double balanceAfter = ProfileSteps.userGetBalance(accountId, userRequest);
 
         assertTrue(balanceBefore < balanceAfter);
 
@@ -54,37 +59,41 @@ public class UserDepositTest {
 
     public static Stream<Arguments> invalidBalance() {
         return Stream.of(
-                Arguments.of(1, 5000.01, ResponseSpecs.DEPOSIT_MAX_LIMIT),
-                Arguments.of(1, 0, ResponseSpecs.DEPOSIT_MIN_LIMIT)
+                Arguments.of( 5000.01, ResponseSpecs.DEPOSIT_MAX_LIMIT),
+                Arguments.of( 0, ResponseSpecs.DEPOSIT_MIN_LIMIT)
         );
     }
 
     @ParameterizedTest
     @MethodSource("invalidBalance")
-    public void userCannotDepositInadmissibleAmountToSelfAccount(int accountId, double amount, String errorMessage) {
+    public void userCannotDepositInadmissibleAmountToSelfAccount(double amount, String errorMessage) {
+        CreateUserRequest userRequest = AdminSteps.createUser();
+        int userAccount = (int) UserSteps.createUserAccount(userRequest).getId();
 
-        double balanceBefore = ProfileSteps.userGetBalance(accountId);
+        double balanceBefore = ProfileSteps.userGetBalance(userAccount, userRequest);
 
         DepositRequest depositRequest = DepositRequest.builder()
-                .id(accountId)
+                .id(userAccount)
                 .balance(amount)
                 .build();
 
         new CrudRequester(
-                RequestSpecs.userSpec(),
+                RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
                 Endpoint.DEPOSIT,
                 ResponseSpecs.requestReturnsBadRequest(errorMessage))
                 .post(depositRequest);
 
-        double balanceAfter = ProfileSteps.userGetBalance(accountId);
+        double balanceAfter = ProfileSteps.userGetBalance(userAccount, userRequest);
 
         assertEquals(balanceBefore, balanceAfter);
     }
 
     @Test
     public void userCannotDepositToNonExistentAccount() {
+        CreateUserRequest userRequest = AdminSteps.createUser();
+        int userAccount = (int) UserSteps.createUserAccount(userRequest).getId();
 
-        double balanceBefore = ProfileSteps.userGetBalance(1);
+        double balanceBefore = ProfileSteps.userGetBalance(userAccount, userRequest);
 
         DepositRequest depositRequest = DepositRequest.builder()
                 .id(RandomData.generateNonExistId())
@@ -92,12 +101,12 @@ public class UserDepositTest {
                 .build();
 
         new CrudRequester(
-                RequestSpecs.userSpec(),
+                RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
                 Endpoint.DEPOSIT,
                 ResponseSpecs.requestReturnsForbidden())
                 .post(depositRequest);
 
-        double balanceAfter = ProfileSteps.userGetBalance(1);
+        double balanceAfter = ProfileSteps.userGetBalance(userAccount, userRequest);
 
         assertEquals(balanceBefore, balanceAfter);
     }

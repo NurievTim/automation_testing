@@ -1,54 +1,51 @@
 package iteration_2.api;
 
 import api.generators.RandomData;
-import api.models.CustomerResponse;
+import api.models.CreateUserRequest;
 import api.models.TransferRequest;
+import api.requests.skeleton.Endpoint;
+import api.requests.skeleton.requests.CrudRequester;
+import api.requests.steps.AdminSteps;
+import api.requests.steps.ProfileSteps;
+import api.requests.steps.UserSteps;
+import api.specs.RequestSpecs;
+import api.specs.ResponseSpecs;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import api.requests.skeleton.Endpoint;
-import api.requests.skeleton.requests.CrudRequester;
-import api.requests.skeleton.requests.ValidatedCrudRequester;
-import api.requests.steps.ProfileSteps;
-import api.specs.RequestSpecs;
-import api.specs.ResponseSpecs;
 
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class UserTransferTest {
+public class UserTransferTest extends BaseTest {
 
     @ParameterizedTest
     @ValueSource(doubles = {0.01, 10000, 9999.99})
     public void userCanTransferBetweenTheirAccounts(double amount) {
+        CreateUserRequest userRequest = AdminSteps.createUser();
+        int senderAccount = (int) UserSteps.createUserAccount(userRequest).getId();
+        int receiverAccount = (int) UserSteps.createUserAccount(userRequest).getId();
+        UserSteps.makeDepositEnoughForTransfer(userRequest, senderAccount);
 
-        CustomerResponse customerResponse = new ValidatedCrudRequester<CustomerResponse>(
-                RequestSpecs.userSpec(),
-                Endpoint.GET_PROFILE,
-                ResponseSpecs.requestReturnsOK())
-                .get();
-
-        int senderAccountId = customerResponse.getAccounts().getFirst().getId();
-        int receiverAccountId = customerResponse.getAccounts().get(1).getId();
-        double balanceBefore = ProfileSteps.userGetBalance(receiverAccountId);
+        double balanceBefore = ProfileSteps.userGetBalance(receiverAccount, userRequest);
 
         TransferRequest transferRequest = TransferRequest.builder()
                 .amount(amount)
-                .senderAccountId(senderAccountId)
-                .receiverAccountId(receiverAccountId)
+                .senderAccountId(senderAccount)
+                .receiverAccountId(receiverAccount)
                 .build();
 
         new CrudRequester(
-                RequestSpecs.userSpec(),
+                RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
                 Endpoint.TRANSFER,
                 ResponseSpecs.requestReturnsOK(ResponseSpecs.SUCCESS_TRANSFER))
                 .post(transferRequest);
 
-        double balanceAfter = ProfileSteps.userGetBalance(receiverAccountId);
+        double balanceAfter = ProfileSteps.userGetBalance(receiverAccount, userRequest);
 
         assertTrue(balanceBefore < balanceAfter);
     }
@@ -63,110 +60,78 @@ public class UserTransferTest {
     @ParameterizedTest
     @MethodSource("invalidAmount")
     public void userCannotTransferInadmissibleAmountBetweenTheirAccounts(double amount, String errorMessage) {
-        CustomerResponse customerResponse = new ValidatedCrudRequester<CustomerResponse>(
-                RequestSpecs.userSpec(),
-                Endpoint.GET_PROFILE,
-                ResponseSpecs.requestReturnsOK())
-                .get();
+        CreateUserRequest userRequest = AdminSteps.createUser();
+        int senderAccount = (int) UserSteps.createUserAccount(userRequest).getId();
+        int receiverAccount = (int) UserSteps.createUserAccount(userRequest).getId();
 
-        int firstId = customerResponse.getAccounts().getFirst().getId();
-        int secondId = customerResponse.getAccounts().get(1).getId();
-
-        double balanceBefore = ProfileSteps.userGetBalance(secondId);
+        double balanceBefore = ProfileSteps.userGetBalance(receiverAccount, userRequest);
 
         TransferRequest transferRequest = TransferRequest.builder()
                 .amount(amount)
-                .senderAccountId(firstId)
-                .receiverAccountId(secondId)
+                .senderAccountId(senderAccount)
+                .receiverAccountId(receiverAccount)
                 .build();
 
         new CrudRequester(
-                RequestSpecs.userSpec(),
+                RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
                 Endpoint.TRANSFER,
                 ResponseSpecs.requestReturnsBadRequest(errorMessage))
                 .post(transferRequest);
 
-        double balanceAfter = ProfileSteps.userGetBalance(secondId);
+        double balanceAfter = ProfileSteps.userGetBalance(receiverAccount, userRequest);
 
         assertEquals(balanceBefore, balanceAfter);
     }
 
     @Test
     public void userHasNotEnoughAmountToTransfer() {
-        CustomerResponse firstCustomerResponse = new ValidatedCrudRequester<CustomerResponse>(
-                RequestSpecs.userSpec(),
-                Endpoint.GET_PROFILE,
-                ResponseSpecs.requestReturnsOK())
-                .get();
+        CreateUserRequest firstUserRequest = AdminSteps.createUser();
+        CreateUserRequest secondUserRequest = AdminSteps.createUser();
+        int senderAccount = (int) UserSteps.createUserAccount(firstUserRequest).getId();
+        int receiverAccount = (int) UserSteps.createUserAccount(secondUserRequest).getId();
 
-        int receiverAccountId = firstCustomerResponse.getAccounts().getFirst().getId();
-
-        CustomerResponse secondCustomerResponse = new ValidatedCrudRequester<CustomerResponse>(
-                RequestSpecs.userEmptyBalanceSpec(),
-                Endpoint.GET_PROFILE,
-                ResponseSpecs.requestReturnsOK())
-                .get();
-
-        int senderAccountId = secondCustomerResponse.getAccounts().getFirst().getId();
-
-        double balanceBefore = ProfileSteps.userGetBalance(receiverAccountId);
+        double balanceBefore = ProfileSteps.userGetBalance(receiverAccount, secondUserRequest);
 
         TransferRequest transferRequest = TransferRequest.builder()
                 .amount(RandomData.generateTransferAmount())
-                .senderAccountId(senderAccountId)
-                .receiverAccountId(receiverAccountId)
+                .senderAccountId(senderAccount)
+                .receiverAccountId(receiverAccount)
                 .build();
 
         new CrudRequester(
-                RequestSpecs.userEmptyBalanceSpec(),
+                RequestSpecs.authAsUser(firstUserRequest.getUsername(), firstUserRequest.getPassword()),
                 Endpoint.TRANSFER,
                 ResponseSpecs.requestReturnsBadRequest(ResponseSpecs.ERROR_TRANSFER))
                 .post(transferRequest);
 
-        double balanceAfter = ProfileSteps.userGetBalance(receiverAccountId);
+        double balanceAfter = ProfileSteps.userGetBalance(receiverAccount, secondUserRequest);
 
         assertEquals(balanceBefore, balanceAfter);
     }
 
     @Test
     public void userCanTransferToAnotherUser() {
+        CreateUserRequest firstUserRequest = AdminSteps.createUser();
+        CreateUserRequest secondUserRequest = AdminSteps.createUser();
+        int senderAccount = (int) UserSteps.createUserAccount(firstUserRequest).getId();
+        int receiverAccount = (int) UserSteps.createUserAccount(secondUserRequest).getId();
+        UserSteps.makeDepositEnoughForTransfer(firstUserRequest, senderAccount);
 
-        CustomerResponse firstCustomerResponse = new ValidatedCrudRequester<CustomerResponse>(
-                RequestSpecs.userSpec(),
-                Endpoint.GET_PROFILE,
-                ResponseSpecs.requestReturnsOK())
-                .get();
-
-        int senderAccountId = firstCustomerResponse.getAccounts().getFirst().getId();
-
-        CustomerResponse secondCustomerResponse = new ValidatedCrudRequester<CustomerResponse>(
-                RequestSpecs.secondUserSpec(),
-                Endpoint.GET_PROFILE,
-                ResponseSpecs.requestReturnsOK())
-                .get();
-
-        int receiverAccountId = secondCustomerResponse.getAccounts().getFirst().getId();
-        double balanceBefore = secondCustomerResponse.getAccounts().getFirst().getBalance();
+        double balanceBefore = ProfileSteps.userGetBalance(receiverAccount, secondUserRequest);
 
         TransferRequest transferRequest = TransferRequest.builder()
                 .amount(RandomData.generateTransferAmount())
-                .senderAccountId(senderAccountId)
-                .receiverAccountId(receiverAccountId)
+                .senderAccountId(senderAccount)
+                .receiverAccountId(receiverAccount)
                 .build();
 
         new CrudRequester(
-                RequestSpecs.userSpec(),
+                RequestSpecs.authAsUser(firstUserRequest.getUsername(), firstUserRequest.getPassword()),
                 Endpoint.TRANSFER,
                 ResponseSpecs.requestReturnsOK(ResponseSpecs.SUCCESS_TRANSFER))
                 .post(transferRequest);
 
-        CustomerResponse secondCustomerResponseAfter = new ValidatedCrudRequester<CustomerResponse>(
-                RequestSpecs.secondUserSpec(),
-                Endpoint.GET_PROFILE,
-                ResponseSpecs.requestReturnsOK())
-                .get();
-
-        double balanceAfter = secondCustomerResponseAfter.getAccounts().getFirst().getBalance();
+        double balanceAfter = ProfileSteps.userGetBalance(receiverAccount, secondUserRequest);
 
         assertTrue(balanceBefore < balanceAfter);
     }
