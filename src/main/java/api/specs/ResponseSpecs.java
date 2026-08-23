@@ -11,15 +11,13 @@ public class ResponseSpecs {
 
     private static final String MESSAGE_JSON_PATH = "message";
 
-    public static final String PROFILE_UPDATED_SUCCESSFULLY = "Profile updated successfully";
     public static final String NAME_VALIDATION_ERROR = "Name must contain two words with letters only";
     public static final String SUCCESS_TRANSFER = "Transfer successful";
     public static final String ERROR_TRANSFER = "Invalid transfer: insufficient funds or invalid accounts";
     public static final String UNAUTH_MESSAGE = "Unauthorized access to account";
-    public static final String DEPOSIT_MAX_LIMIT = "Deposit amount cannot exceed 5000";
-    public static final String DEPOSIT_MIN_LIMIT = "Deposit amount must be at least 0.01";
-    public static final String TRANSFER_MIN_LIMIT = "Transfer amount must be at least 0.01";
+    public static final String DEPOSIT_MAX_LIMIT = "Deposit amount exceeds the 5000 limit";
     public static final String TRANSFER_MAX_LIMIT = "Transfer amount cannot exceed 10000";
+    public static final String AMOUNT_MUST_BE_POSITIVE = "must be greater than 0";
 
     private static ResponseSpecBuilder defaultResponseBuilder() {
         return new ResponseSpecBuilder();
@@ -38,24 +36,24 @@ public class ResponseSpecs {
                 build();
     }
 
-    public static ResponseSpecification requestReturnsBadRequest(String errorKey, String errorValue) {
-        return defaultResponseBuilder()
-                .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
-                .expectBody(errorKey, equalTo(errorValue))
-                .build();
-    }
-
     public static ResponseSpecification requestReturnsBadRequest(String expectedMessage) {
         return defaultResponseBuilder()
                 .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
-                .expectBody(equalTo(expectedMessage))
+                .expectBody(MESSAGE_JSON_PATH, equalTo(expectedMessage))
+                .build();
+    }
+
+    public static ResponseSpecification requestReturnsFieldValidationError(String expectedMessage) {
+        return defaultResponseBuilder()
+                .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
+                .expectBody("amount" + "[0]", equalTo(expectedMessage))
                 .build();
     }
 
     public static ResponseSpecification requestReturnsForbidden() {
         return defaultResponseBuilder()
                 .expectStatusCode(HttpStatus.SC_FORBIDDEN)
-                .expectBody(equalTo(UNAUTH_MESSAGE))
+                .expectBody(MESSAGE_JSON_PATH, equalTo(UNAUTH_MESSAGE))
                 .build();
     }
 
