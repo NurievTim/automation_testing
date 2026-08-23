@@ -9,6 +9,10 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Customer extends BaseModel{
-    private CustomerResponse customer;
+public class TransactionDto extends BaseModel {
+    private long id;
+    private double amount;
+    private TransactionType type;
+    private String timestamp;
+    private Long relatedAccountId;
 }

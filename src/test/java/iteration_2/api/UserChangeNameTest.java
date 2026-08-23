@@ -1,8 +1,9 @@
 package iteration_2.api;
 
+import api.dao.CustomerDao;
+import api.dao.comparison.DaoAndModelAssertions;
 import api.generators.RandomData;
 import api.models.CreateUserRequest;
-import api.models.Customer;
 import api.models.CustomerRequest;
 import api.models.CustomerResponse;
 import api.models.comparison.ModelAssertions;
@@ -10,6 +11,7 @@ import api.requests.skeleton.Endpoint;
 import api.requests.skeleton.requests.CrudRequester;
 import api.requests.skeleton.requests.ValidatedCrudRequester;
 import api.requests.steps.AdminSteps;
+import api.requests.steps.DataBaseSteps;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
 import org.junit.jupiter.api.Test;
@@ -29,15 +31,17 @@ public class UserChangeNameTest extends BaseTest {
                 .name(RandomData.getValidName())
                 .build();
 
-        Customer customer = new ValidatedCrudRequester<Customer>(
+        CustomerResponse customerResponse = new ValidatedCrudRequester<CustomerResponse>(
                 RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
                 Endpoint.PUT_PROFILE,
-                ResponseSpecs.requestReturnsOK(ResponseSpecs.PROFILE_UPDATED_SUCCESSFULLY))
+                ResponseSpecs.requestReturnsOK())
                 .put(customerRequest);
 
-        CustomerResponse customerResponse = customer.getCustomer();
-
         ModelAssertions.assertThatModels(customerRequest, customerResponse).match();
+
+        CustomerDao customerDao = DataBaseSteps.getCustomerByUsername(userRequest.getUsername());
+        DaoAndModelAssertions.assertThat(customerResponse, customerDao).match();
+
     }
 
     static Stream<String> invalidNameProvider() {

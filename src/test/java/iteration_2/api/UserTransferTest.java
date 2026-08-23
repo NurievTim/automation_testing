@@ -1,15 +1,19 @@
 package iteration_2.api;
 
+import api.dao.AccountDao;
+import api.dao.comparison.DaoAndModelAssertions;
 import api.generators.RandomData;
+import api.models.Accounts;
 import api.models.CreateUserRequest;
 import api.models.TransferRequest;
 import api.requests.skeleton.Endpoint;
 import api.requests.skeleton.requests.CrudRequester;
 import api.requests.steps.AdminSteps;
-import api.requests.steps.ProfileSteps;
+import api.requests.steps.DataBaseSteps;
 import api.requests.steps.UserSteps;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
+import io.restassured.specification.ResponseSpecification;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -18,8 +22,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class UserTransferTest extends BaseTest {
 
@@ -31,7 +34,7 @@ public class UserTransferTest extends BaseTest {
         int receiverAccount = (int) UserSteps.createUserAccount(userRequest).getId();
         UserSteps.makeDepositEnoughForTransfer(userRequest, senderAccount);
 
-        double balanceBefore = ProfileSteps.userGetBalance(receiverAccount, userRequest);
+        Accounts balanceBefore = UserSteps.userGetAccountById(receiverAccount, userRequest);
 
         TransferRequest transferRequest = TransferRequest.builder()
                 .amount(amount)
@@ -45,26 +48,29 @@ public class UserTransferTest extends BaseTest {
                 ResponseSpecs.requestReturnsOK(ResponseSpecs.SUCCESS_TRANSFER))
                 .post(transferRequest);
 
-        double balanceAfter = ProfileSteps.userGetBalance(receiverAccount, userRequest);
+        Accounts balanceAfter = UserSteps.userGetAccountById(receiverAccount, userRequest);
+        AccountDao accountDao = DataBaseSteps.getAccountByAccountId(receiverAccount);
 
-        assertTrue(balanceBefore < balanceAfter);
+        assertThat(balanceBefore.getBalance()).isLessThan(balanceAfter.getBalance());
+        assertThat(accountDao.getBalance()).isEqualTo(balanceAfter.getBalance());
+        DaoAndModelAssertions.assertThat(balanceAfter, accountDao).match();
     }
 
     public static Stream<Arguments> invalidAmount() {
         return Stream.of(
-                Arguments.of(0, ResponseSpecs.TRANSFER_MIN_LIMIT),
-                Arguments.of(10000.01, ResponseSpecs.TRANSFER_MAX_LIMIT)
+                Arguments.of(0, ResponseSpecs.requestReturnsFieldValidationError(ResponseSpecs.AMOUNT_MUST_BE_POSITIVE)),
+                Arguments.of(10000.01, ResponseSpecs.requestReturnsBadRequest(ResponseSpecs.TRANSFER_MAX_LIMIT))
         );
     }
 
     @ParameterizedTest
     @MethodSource("invalidAmount")
-    public void userCannotTransferInadmissibleAmountBetweenTheirAccounts(double amount, String errorMessage) {
+    public void userCannotTransferInadmissibleAmountBetweenTheirAccounts(double amount, ResponseSpecification errorSpec) {
         CreateUserRequest userRequest = AdminSteps.createUser();
         int senderAccount = (int) UserSteps.createUserAccount(userRequest).getId();
         int receiverAccount = (int) UserSteps.createUserAccount(userRequest).getId();
 
-        double balanceBefore = ProfileSteps.userGetBalance(receiverAccount, userRequest);
+        Accounts balanceBefore = UserSteps.userGetAccountById(receiverAccount, userRequest);
 
         TransferRequest transferRequest = TransferRequest.builder()
                 .amount(amount)
@@ -75,12 +81,14 @@ public class UserTransferTest extends BaseTest {
         new CrudRequester(
                 RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
                 Endpoint.TRANSFER,
-                ResponseSpecs.requestReturnsBadRequest(errorMessage))
-                .post(transferRequest);
+                errorSpec
+        ).post(transferRequest);
 
-        double balanceAfter = ProfileSteps.userGetBalance(receiverAccount, userRequest);
+        Accounts balanceAfter = UserSteps.userGetAccountById(receiverAccount, userRequest);
+        AccountDao accountDao = DataBaseSteps.getAccountByAccountId(receiverAccount);
 
-        assertEquals(balanceBefore, balanceAfter);
+        assertThat(balanceBefore.getBalance()).isEqualTo(balanceAfter.getBalance());
+        assertThat(accountDao.getBalance()).isEqualTo(balanceBefore.getBalance());
     }
 
     @Test
@@ -90,7 +98,7 @@ public class UserTransferTest extends BaseTest {
         int senderAccount = (int) UserSteps.createUserAccount(firstUserRequest).getId();
         int receiverAccount = (int) UserSteps.createUserAccount(secondUserRequest).getId();
 
-        double balanceBefore = ProfileSteps.userGetBalance(receiverAccount, secondUserRequest);
+        Accounts balanceBefore = UserSteps.userGetAccountById(receiverAccount, secondUserRequest);
 
         TransferRequest transferRequest = TransferRequest.builder()
                 .amount(RandomData.generateTransferAmount())
@@ -104,9 +112,11 @@ public class UserTransferTest extends BaseTest {
                 ResponseSpecs.requestReturnsBadRequest(ResponseSpecs.ERROR_TRANSFER))
                 .post(transferRequest);
 
-        double balanceAfter = ProfileSteps.userGetBalance(receiverAccount, secondUserRequest);
+        Accounts balanceAfter = UserSteps.userGetAccountById(receiverAccount, secondUserRequest);
+        AccountDao accountDao = DataBaseSteps.getAccountByAccountId(receiverAccount);
 
-        assertEquals(balanceBefore, balanceAfter);
+        assertThat(balanceBefore.getBalance()).isEqualTo(balanceAfter.getBalance());
+        assertThat(accountDao.getBalance()).isEqualTo(balanceBefore.getBalance());
     }
 
     @Test
@@ -117,7 +127,7 @@ public class UserTransferTest extends BaseTest {
         int receiverAccount = (int) UserSteps.createUserAccount(secondUserRequest).getId();
         UserSteps.makeDepositEnoughForTransfer(firstUserRequest, senderAccount);
 
-        double balanceBefore = ProfileSteps.userGetBalance(receiverAccount, secondUserRequest);
+        Accounts balanceBefore = UserSteps.userGetAccountById(receiverAccount, secondUserRequest);
 
         TransferRequest transferRequest = TransferRequest.builder()
                 .amount(RandomData.generateTransferAmount())
@@ -128,11 +138,13 @@ public class UserTransferTest extends BaseTest {
         new CrudRequester(
                 RequestSpecs.authAsUser(firstUserRequest.getUsername(), firstUserRequest.getPassword()),
                 Endpoint.TRANSFER,
-                ResponseSpecs.requestReturnsOK(ResponseSpecs.SUCCESS_TRANSFER))
-                .post(transferRequest);
+                ResponseSpecs.requestReturnsOK(ResponseSpecs.SUCCESS_TRANSFER)
+        ).post(transferRequest);
 
-        double balanceAfter = ProfileSteps.userGetBalance(receiverAccount, secondUserRequest);
+        Accounts balanceAfter = UserSteps.userGetAccountById(receiverAccount, secondUserRequest);
+        AccountDao accountDao = DataBaseSteps.getAccountByAccountId(receiverAccount);
 
-        assertTrue(balanceBefore < balanceAfter);
+        assertThat(balanceBefore.getBalance()).isLessThan(balanceAfter.getBalance());
+        assertThat(accountDao.getBalance()).isEqualTo(balanceAfter.getBalance());
     }
 }
