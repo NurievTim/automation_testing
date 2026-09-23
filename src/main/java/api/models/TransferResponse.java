@@ -10,8 +10,14 @@ import lombok.*;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TransferResponse extends BaseModel {
+    private double fraudRiskScore;
+    private int receiverAccountId;
+    private boolean requiresVerification;
     private String message;
     private double amount;
-    private int receiverAccountId;
+    private TransferStatus status;
     private int senderAccountId;
+    private String fraudReason;
+    private int transactionId;
+    private boolean requiresManualReview;
 }
