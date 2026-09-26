@@ -1,9 +1,9 @@
 package iteration_2.ui;
 
 import api.configs.SessionStorage;
-import api.requests.steps.UserSteps;
 import api.generators.RandomData;
 import api.models.CustomerResponse;
+import api.requests.steps.UserSteps;
 import common.annotations.UserSession;
 import org.junit.jupiter.api.Test;
 import ui.pages.Alerts;
@@ -22,9 +22,7 @@ public class UserChangeNameTest extends BaseUiTest {
                 .open()
                 .goToProfilePage()
                 .changeName(newName)
-                .checkAlertMessageAndAccept(
-                        Alerts.NAME_UPDATED_SUCCESSFULLY.getMessage()
-                );
+                .checkAlertMessageAndAccept(Alerts.NAME_UPDATED_SUCCESSFULLY);
         CustomerResponse userProfile = UserSteps.getUserProfile(SessionStorage.getUser());
 
         assertThat(userProfile.getName()).isEqualTo(newName);
@@ -39,9 +37,7 @@ public class UserChangeNameTest extends BaseUiTest {
                 .open()
                 .goToProfilePage()
                 .changeName(newName)
-                .checkAlertMessageAndAccept(
-                        Alerts.NAME_MUST_CONTAINS.getMessage()
-                );
+                .checkAlertMessageAndAccept(Alerts.INVALID_NAME);
         CustomerResponse userProfile = UserSteps.getUserProfile(SessionStorage.getUser());
 
         assertThat(userProfile.getName()).isNotEqualTo(newName);

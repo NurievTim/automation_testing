@@ -1,6 +1,7 @@
 package api.requests.steps;
 
 import api.models.Accounts;
+import api.models.CreateUserRequest;
 import api.models.CustomerResponse;
 import api.requests.skeleton.Endpoint;
 import api.requests.skeleton.requests.ValidatedCrudRequester;
@@ -8,9 +9,9 @@ import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
 
 public class ProfileSteps {
-    public static double userGetBalance(int accountId) {
+    public static double userGetBalance(int accountId, CreateUserRequest userRequest) {
         CustomerResponse customerResponse = new ValidatedCrudRequester<CustomerResponse>(
-                RequestSpecs.userSpec(),
+                RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
                 Endpoint.GET_PROFILE,
                 ResponseSpecs.requestReturnsOK())
                 .get();

@@ -1,8 +1,10 @@
 package ui.pages;
 
 import com.codeborne.selenide.Selectors;
+import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.SelenideElement;
 
+import static com.codeborne.selenide.Condition.interactable;
 import static com.codeborne.selenide.Selenide.$;
 
 public class ProfilePage extends BasePage<ProfilePage> {
@@ -15,9 +17,20 @@ public class ProfilePage extends BasePage<ProfilePage> {
     }
 
     public ProfilePage changeName(String newName) {
-        namePlaceholder.sendKeys(newName);
+        namePlaceholder.shouldBe(interactable);
+        typeNameUntilItSurvivesProfilePrefill(newName);
         saveChangesButton.click();
         return this;
+    }
+
+    private void typeNameUntilItSurvivesProfilePrefill(String newName) {
+        Selenide.Wait().until(driver -> {
+            if (newName.equals(namePlaceholder.getValue())) {
+                return true;
+            }
+            namePlaceholder.setValue(newName);
+            return false;
+        });
     }
 
 

@@ -4,9 +4,9 @@ import api.models.CreateUserRequest;
 import api.specs.RequestSpecs;
 import com.codeborne.selenide.Selenide;
 import org.openqa.selenium.Alert;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import static com.codeborne.selenide.Selenide.executeJavaScript;
-import static com.codeborne.selenide.Selenide.switchTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public abstract class BasePage<T extends BasePage> {
@@ -21,10 +21,20 @@ public abstract class BasePage<T extends BasePage> {
     }
 
     public T checkAlertMessageAndAccept(String alertMessage) {
-        Alert alert = switchTo().alert();
-        assertThat(alert.getText()).isEqualTo(alertMessage);
-        alert.accept();
+        assertThat(acceptAlertAndGetText()).isEqualTo(alertMessage);
         return (T) this;
+    }
+
+    public T checkAlertMessageAndAccept(Alerts expectedAlert, Object... args) {
+        assertThat(acceptAlertAndGetText()).isIn(expectedAlert.getMessages(args));
+        return (T) this;
+    }
+
+    private String acceptAlertAndGetText() {
+        Alert alert = Selenide.Wait().until(ExpectedConditions.alertIsPresent());
+        String actualMessage = alert.getText();
+        alert.accept();
+        return actualMessage;
     }
 
     public static void authAsUser(String username, String password) {
