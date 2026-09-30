@@ -2,6 +2,7 @@ package api.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
+import lombok.experimental.FieldNameConstants;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -9,6 +10,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@FieldNameConstants
 public class TransferResponse extends BaseModel {
     private double fraudRiskScore;
     private int receiverAccountId;

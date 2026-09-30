@@ -13,10 +13,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 public class FraudCheckWireMockExtension implements BeforeEachCallback, AfterEachCallback {
 
     private WireMockServer wireMockServer;
+    private FraudCheckMock config;
 
     @Override
     public void beforeEach(ExtensionContext context) {
-        // Find the FraudCheckMock annotation on the test method or class
         FraudCheckMock mockConfig = context.getTestMethod()
                 .map(method -> method.getAnnotation(FraudCheckMock.class))
                 .orElseGet(() -> context.getTestClass()
@@ -29,11 +29,11 @@ public class FraudCheckWireMockExtension implements BeforeEachCallback, AfterEac
     }
 
     private void setupWireMock(FraudCheckMock config) {
+        this.config = config;
         wireMockServer = new WireMockServer(WireMockConfiguration.wireMockConfig().port(config.port()));
         wireMockServer.start();
         WireMock.configureFor("0.0.0.0", config.port());
 
-        // Create the response body based on annotation parameters
         String responseBody = String.format("{\n" +
                         "  \"status\": \"%s\",\n" +
                         "  \"decision\": \"%s\",\n" +
@@ -49,19 +49,33 @@ public class FraudCheckWireMockExtension implements BeforeEachCallback, AfterEac
                 config.requiresManualReview(),
                 config.additionalVerificationRequired());
 
-        // Mock the fraud detection service endpoint
+        var responseBuilder = aResponse()
+                .withStatus(config.httpStatus())
+                .withHeader("Content-Type", "application/json")
+                .withBody(responseBody);
+
+        if (config.fixedDelayMs() > 0) {
+            responseBuilder.withFixedDelay(config.fixedDelayMs());
+        }
+
         stubFor(post(urlPathMatching(config.endpoint()))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(responseBody)));
+                .willReturn(responseBuilder));
     }
 
     @Override
     public void afterEach(ExtensionContext context) {
         if (wireMockServer != null) {
             wireMockServer.stop();
+            wireMockServer = null;
+            config = null;
         }
+    }
+
+    public void verifyFraudCheckCalled() {
+        if (wireMockServer == null) {
+            throw new IllegalStateException("Fraud check mock is not started: test has no @FraudCheckMock");
+        }
+        wireMockServer.verify(postRequestedFor(urlPathEqualTo(config.endpoint())));
     }
 
     public String getBaseUrl() {
