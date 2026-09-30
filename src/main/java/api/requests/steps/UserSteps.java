@@ -82,4 +82,23 @@ public class UserSteps {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Аккаунт с ID " + accountId + " не найден у пользователя!"));
     }
+
+    public static TransferResponse userTransferWithFraudCheck(
+            int senderAccount,
+            int receiverAccount,
+            int amount,
+            CreateUserRequest userRequest)
+    {
+        TransferRequest transferRequest = TransferRequest.builder()
+                .amount(amount)
+                .senderAccountId(senderAccount)
+                .receiverAccountId(receiverAccount)
+                .build();
+
+        return new ValidatedCrudRequester<TransferResponse>(
+                RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
+                Endpoint.TRANSFER_WITH_FRAUD_CHECK,
+                ResponseSpecs.requestReturnsOK()
+        ).post(transferRequest);
+    }
 }
