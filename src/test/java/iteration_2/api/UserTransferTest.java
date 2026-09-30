@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class UserTransferTest {
+public class UserTransferTest extends BaseTest {
 
     @ParameterizedTest
     @ValueSource(doubles = {0.01, 10000, 9999.99})

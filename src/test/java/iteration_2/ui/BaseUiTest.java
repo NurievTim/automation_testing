@@ -5,6 +5,7 @@ import api.models.CreateUserRequest;
 import api.specs.RequestSpecs;
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.Selenide;
+import common.extensions.TimingExtension;
 import common.extensions.UserSessionExtension;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,7 +14,7 @@ import java.util.Map;
 
 import static com.codeborne.selenide.Selenide.executeJavaScript;
 
-
+@ExtendWith(TimingExtension.class)
 @ExtendWith(UserSessionExtension.class)
 public class BaseUiTest{
     @BeforeAll
@@ -22,6 +23,7 @@ public class BaseUiTest{
         Configuration.baseUrl = Config.getProperty("baseUiUrl");
         Configuration.browserSize = Config.getProperty("browserSize");
         Configuration.browser = Config.getProperty("browser");
+        Configuration.headless = true;
         Configuration.browserCapabilities.setCapability(
                 "selenoid:options",
                 Map.of("enableVNC", true, "enableLog", true)

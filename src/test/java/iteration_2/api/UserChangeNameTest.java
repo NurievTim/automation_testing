@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-public class UserChangeNameTest {
+public class UserChangeNameTest extends BaseTest {
 
     @Test
     public void userCanChangeName() {
