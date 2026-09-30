@@ -20,4 +20,12 @@ public class AdminSteps {
 
         return userRequest;
     }
+
+    public static void deleteUser(long userId) {
+        new CrudRequester(
+                RequestSpecs.adminSpec(),
+                Endpoint.ADMIN_USER_BY_ID,
+                ResponseSpecs.requestReturnsOK())
+                .delete(userId);
+    }
 }

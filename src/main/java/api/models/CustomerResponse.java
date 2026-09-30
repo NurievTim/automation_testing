@@ -3,8 +3,6 @@ package api.models;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 
-import java.util.List;
-
 @EqualsAndHashCode(callSuper = true)
 @Data
 @AllArgsConstructor
@@ -14,8 +12,6 @@ import java.util.List;
 public class CustomerResponse extends BaseModel {
     private int id;
     private String username;
-    private String password;
     private String name;
     private String role;
-    private List<Accounts> accounts;
 }

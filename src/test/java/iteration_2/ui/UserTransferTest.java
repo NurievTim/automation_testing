@@ -4,7 +4,6 @@ import api.configs.SessionStorage;
 import api.generators.RandomData;
 import api.models.CreateAccountResponse;
 import api.models.CreateUserRequest;
-import api.models.CustomerResponse;
 import api.requests.steps.UserSteps;
 import common.annotations.UserSession;
 import org.junit.jupiter.api.Test;
@@ -33,9 +32,7 @@ public class UserTransferTest extends BaseUiTest {
                 .checkAlertMessageAndAccept(Alerts.SUCCESS_TRANSFER
                         .getMessage(transferAmount, secondUserAccount.getAccountNumber()));
 
-        CustomerResponse userProfile = UserSteps.getUserProfile(user);
-
-        double secondAccountBalance = userProfile.getAccounts().stream()
+        double secondAccountBalance = UserSteps.getUserAccounts(user).stream()
                 .filter(acc -> acc.getId() == secondUserAccount.getId())
                 .findFirst()
                 .orElseThrow()
@@ -59,9 +56,7 @@ public class UserTransferTest extends BaseUiTest {
                 .makeTransfer(firstUserAccount.getId(), secondUserAccount.getAccountNumber(), transferAmount)
                 .checkAlertMessageAndAccept(Alerts.TRANSFER_AMOUNT_CANNOT_EXCEED_10000.getMessage());
 
-        CustomerResponse userProfile = UserSteps.getUserProfile(user);
-
-        double secondAccountBalance = userProfile.getAccounts().stream()
+        double secondAccountBalance = UserSteps.getUserAccounts(user).stream()
                 .filter(acc -> acc.getId() == secondUserAccount.getId())
                 .findFirst()
                 .orElseThrow()
@@ -88,9 +83,7 @@ public class UserTransferTest extends BaseUiTest {
                 .submitTransfer()
                 .checkAlertMessageAndAccept(Alerts.FILL_ALL_FIELDS_AND_CONFIRM.getMessage());
 
-        CustomerResponse userProfile = UserSteps.getUserProfile(user);
-
-        double secondAccountBalance = userProfile.getAccounts().stream()
+        double secondAccountBalance = UserSteps.getUserAccounts(user).stream()
                 .filter(acc -> acc.getId() == secondUserAccount.getId())
                 .findFirst()
                 .orElseThrow()

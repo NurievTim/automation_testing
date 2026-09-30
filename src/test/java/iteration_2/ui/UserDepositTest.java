@@ -3,7 +3,6 @@ package iteration_2.ui;
 import api.configs.SessionStorage;
 import api.generators.RandomData;
 import api.models.CreateAccountResponse;
-import api.models.CustomerResponse;
 import api.requests.steps.UserSteps;
 import common.annotations.UserSession;
 import org.junit.jupiter.api.Test;
@@ -27,9 +26,9 @@ public class UserDepositTest extends BaseUiTest{
                         Alerts.SUCCESS_DEPOSIT.getMessage(depositAmount, userAccount.getAccountNumber())
                 );
 
-        CustomerResponse userProfile = UserSteps.getUserProfile(SessionStorage.getUser());
+        double accountBalance = UserSteps.getUserAccounts(SessionStorage.getUser()).getFirst().getBalance();
 
-        assertThat(userProfile.getAccounts().getFirst().getBalance()).isEqualTo(depositAmount);
+        assertThat(accountBalance).isEqualTo(depositAmount);
     }
 
     @Test
@@ -45,8 +44,8 @@ public class UserDepositTest extends BaseUiTest{
                         Alerts.DEPOSIT_LESS_OR_EQUAL_5000.getMessage()
                 );
 
-        CustomerResponse userProfile = UserSteps.getUserProfile(SessionStorage.getUser());
+        double accountBalance = UserSteps.getUserAccounts(SessionStorage.getUser()).getFirst().getBalance();
 
-        assertThat(userProfile.getAccounts().getFirst().getBalance()).isZero();
+        assertThat(accountBalance).isZero();
     }
 }
