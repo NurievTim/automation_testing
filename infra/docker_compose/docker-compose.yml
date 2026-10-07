@@ -21,12 +21,18 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nbank
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      FRAUD_DETECTION_SERVICE_URL: http://host.docker.internal:8080
+      FRAUD_DETECTION_SERVICE_URL: ${FRAUD_DETECTION_SERVICE_URL:-http://host.docker.internal:8080}
     depends_on:
       postgres:
         condition: service_healthy
     ports:
       - "4111:4111"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://localhost:4111/ || exit 1"]
+      start_period: 60s
+      interval: 3s
+      timeout: 3s
+      retries: 15
     networks:
       - nbank-network
 
