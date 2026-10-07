@@ -21,8 +21,13 @@ USER root
 CMD /bin/bash -c " \
     mkdir -p /app/logs ; \
     { \
-    echo '>>> Running tests with profile ${TEST_PROFILE}' ; \
-    mvn test -q -P ${TEST_PROFILE} ; \
+    if [ -n \"${TEST_PROFILE:-}\" ]; then \
+            echo '>>> Running tests with profile $TEST_PROFILE' ; \
+            mvn test -q -P '$TEST_PROFILE' ; \
+        else \
+            echo '>>> Running all tests without profile' ; \
+            mvn test -q ; \
+        fi ; \
     echo '>>> Running surefire report' ; \
     mvn surefire-report:report-only ; \
     } > /app/logs/run.log 2>&1"
