@@ -1,0 +1,24 @@
+name: Run tests
+
+on: [ push, workflow_dispatch ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Setup services
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+          cache: 'maven'
+
+      - name: Setup Services
+        run: bash infra/docker_compose/restart_docker.sh
+
+      - name: Run tests
+        run: ./mvnw clean test
