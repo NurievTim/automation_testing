@@ -17,7 +17,7 @@ public class ResponseSpecs {
     public static final String UNAUTH_MESSAGE = "Unauthorized access to account";
     public static final String DEPOSIT_MAX_LIMIT = "Deposit amount exceeds the 5000 limit";
     public static final String TRANSFER_MAX_LIMIT = "Transfer amount cannot exceed 10000";
-    public static final String AMOUNT_MUST_BE_POSITIVE = "must be greater than 0";
+    public static final String INVALID_ACCOUNT_OR_AMOUNT = "Invalid account or amount";
 
     private static ResponseSpecBuilder defaultResponseBuilder() {
         return new ResponseSpecBuilder();
@@ -40,13 +40,6 @@ public class ResponseSpecs {
         return defaultResponseBuilder()
                 .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
                 .expectBody(MESSAGE_JSON_PATH, equalTo(expectedMessage))
-                .build();
-    }
-
-    public static ResponseSpecification requestReturnsFieldValidationError(String expectedMessage) {
-        return defaultResponseBuilder()
-                .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
-                .expectBody("amount" + "[0]", equalTo(expectedMessage))
                 .build();
     }
 

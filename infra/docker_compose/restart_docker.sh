@@ -1,12 +1,23 @@
 #!/bin/bash
 
+# Переходим в папку скрипта, чтобы относительные пути работали из любого места запуска
+cd "$(dirname "$0")" || exit 1
+
 echo ">>> Остановить Docker Compose"
 docker compose down
 
 echo ">>> Docker pull все образы браузеров"
 
+# Образы браузеров для arm64 (Apple Silicon) и amd64 (GitHub runner) разные
+if [ "$(docker info --format '{{.Architecture}}')" = "x86_64" ]; then
+    export SELENOID_CONFIG_DIR=./config-amd64
+else
+    export SELENOID_CONFIG_DIR=./config
+fi
+echo ">>> Конфиг браузеров: $SELENOID_CONFIG_DIR"
+
 # Путь до файла
-json_file="./config/browsers.json"
+json_file="$SELENOID_CONFIG_DIR/browsers.json"
 
 # Проверяем, что jq установлен
 if ! command -v jq &> /dev/null; then
@@ -23,5 +34,8 @@ for image in $images; do
     docker pull "$image"
 done
 
+export DOCKER_API_VERSION=$(docker version --format '{{.Server.APIVersion}}')
+echo ">>> Docker API version: $DOCKER_API_VERSION"
+
 echo ">>> Запуск Docker Compose"
-docker compose up
+docker compose up -d --wait

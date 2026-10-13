@@ -16,17 +16,25 @@ services:
       - nbank-network
 
   backend:
-    image: nobugsme/nbank:with_fraud_check_with_swagger_fix
+    image: nobugsme/nbank:preprod_version
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nbank
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      FRAUD_DETECTION_SERVICE_URL: http://host.docker.internal:8080
+      FRAUD_DETECTION_SERVICE_URL: ${FRAUD_DETECTION_SERVICE_URL:-http://host.docker.internal:8080}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy
     ports:
       - "4111:4111"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://localhost:4111/ || exit 1"]
+      start_period: 60s
+      interval: 3s
+      timeout: 3s
+      retries: 15
     networks:
       - nbank-network
 
@@ -37,29 +45,19 @@ services:
     depends_on:
       - backend
     networks:
-      - nbank-network
-
-  nginx:
-    image: nginx:latest
-    ports:
-      - "80:80"
-    volumes:
-      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - frontend
-      - backend
-    networks:
-      - nbank-network
+      nbank-network:
+        aliases:
+          - nginx
 
   selenoid:
     image: aerokube/selenoid:latest-release
     environment:
-      DOCKER_API_VERSION: "1.53"
+      DOCKER_API_VERSION: ${DOCKER_API_VERSION:-1.53}
     ports:
       - "4444:4444"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./config/:/etc/selenoid/:ro
+      - ${SELENOID_CONFIG_DIR:-./config}/:/etc/selenoid/:ro
     networks:
       - nbank-network
     command: [ "-container-network", "nbank-network" ]

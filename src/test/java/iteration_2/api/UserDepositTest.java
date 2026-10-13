@@ -58,7 +58,7 @@ public class UserDepositTest extends BaseTest {
     public static Stream<Arguments> invalidBalance() {
         return Stream.of(
                 Arguments.of(5000.01, ResponseSpecs.requestReturnsBadRequest(ResponseSpecs.DEPOSIT_MAX_LIMIT)),
-                Arguments.of(0, ResponseSpecs.requestReturnsFieldValidationError(ResponseSpecs.AMOUNT_MUST_BE_POSITIVE))
+                Arguments.of(0, ResponseSpecs.requestReturnsBadRequest(ResponseSpecs.INVALID_ACCOUNT_OR_AMOUNT))
         );
     }
 

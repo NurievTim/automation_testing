@@ -1,0 +1,7 @@
+target/
+test-output/
+.git/
+.idea/
+.claude/
+NBank-UI/
+infra/
