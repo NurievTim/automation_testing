@@ -12,7 +12,7 @@ TEST_RUN="test-run-$(date +%Y%m%d_%H%M)"
 TEST_OUTPUT_DIR="$PWD/test-output/$TEST_RUN"
 
 SERVER=http://backend:4111/
-BASEUIURL=http://nginx
+BASEUIURL=http://frontend
 UIREMOTE=http://selenoid:4444/wd/hub
 DB_URL=jdbc:postgresql://postgres:5432/nbank
 TEST_PROFILE=${1:-}

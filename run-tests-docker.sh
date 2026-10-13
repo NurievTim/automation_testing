@@ -18,7 +18,7 @@ docker run --rm \
   -v "$TEST_OUTPUT_DIR/surefire-reports":/app/target/surefire-reports \
   -v "$TEST_OUTPUT_DIR/reports":/app/target/reports \
   -e SERVER=http://backend:4111/ \
-  -e BASEUIURL=http://nginx \
+  -e BASEUIURL=http://frontend \
   -e UIREMOTE=http://selenoid:4444/wd/hub \
   -e DB_URL=jdbc:postgresql://postgres:5432/nbank \
   -e TEST_PROFILE="$TEST_PROFILE" \

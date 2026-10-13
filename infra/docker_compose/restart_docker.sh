@@ -27,4 +27,4 @@ for image in $images; do
 done
 
 echo ">>> Запуск Docker Compose"
-docker compose up -d
+docker compose up -d --wait
