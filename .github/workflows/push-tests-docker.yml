@@ -2,8 +2,6 @@ name: Push tests to Docker Hub
 
 on:
   push:
-    branches:
-      - main
     paths:
       - 'src/**'
 
