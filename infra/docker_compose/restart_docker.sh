@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Переходим в папку скрипта, чтобы относительные пути работали из любого места запуска
+cd "$(dirname "$0")" || exit 1
+
 echo ">>> Остановить Docker Compose"
 docker compose down
 
