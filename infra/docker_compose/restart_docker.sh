@@ -8,8 +8,16 @@ docker compose down
 
 echo ">>> Docker pull все образы браузеров"
 
+# Образы браузеров для arm64 (Apple Silicon) и amd64 (GitHub runner) разные
+if [ "$(docker info --format '{{.Architecture}}')" = "x86_64" ]; then
+    export SELENOID_CONFIG_DIR=./config-amd64
+else
+    export SELENOID_CONFIG_DIR=./config
+fi
+echo ">>> Конфиг браузеров: $SELENOID_CONFIG_DIR"
+
 # Путь до файла
-json_file="./config/browsers.json"
+json_file="$SELENOID_CONFIG_DIR/browsers.json"
 
 # Проверяем, что jq установлен
 if ! command -v jq &> /dev/null; then

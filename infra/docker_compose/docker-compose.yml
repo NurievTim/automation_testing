@@ -57,7 +57,7 @@ services:
       - "4444:4444"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./config/:/etc/selenoid/:ro
+      - ${SELENOID_CONFIG_DIR:-./config}/:/etc/selenoid/:ro
     networks:
       - nbank-network
     command: [ "-container-network", "nbank-network" ]
