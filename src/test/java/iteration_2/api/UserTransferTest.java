@@ -58,7 +58,7 @@ public class UserTransferTest extends BaseTest {
 
     public static Stream<Arguments> invalidAmount() {
         return Stream.of(
-                Arguments.of(0, ResponseSpecs.requestReturnsFieldValidationError(ResponseSpecs.AMOUNT_MUST_BE_POSITIVE)),
+                Arguments.of(0, ResponseSpecs.requestReturnsBadRequest(ResponseSpecs.ERROR_TRANSFER)),
                 Arguments.of(10000.01, ResponseSpecs.requestReturnsBadRequest(ResponseSpecs.TRANSFER_MAX_LIMIT))
         );
     }
