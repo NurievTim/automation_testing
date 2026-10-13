@@ -26,5 +26,8 @@ for image in $images; do
     docker pull "$image"
 done
 
+export DOCKER_API_VERSION=$(docker version --format '{{.Server.APIVersion}}')
+echo ">>> Docker API version: $DOCKER_API_VERSION"
+
 echo ">>> Запуск Docker Compose"
 docker compose up -d --wait
