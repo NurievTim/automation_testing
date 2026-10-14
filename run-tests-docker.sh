@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 IMAGE_NAME=nbank-test
 TEST_RUN="test-run-$(date +%Y%m%d_%H%M)"
 TEST_OUTPUT_DIR=./test-output/$TEST_RUN
@@ -11,6 +13,7 @@ mkdir -p "$TEST_OUTPUT_DIR/reports"
 mkdir -p "$TEST_OUTPUT_DIR/surefire-reports"
 
 echo ">>> Start tests"
+TEST_EXIT_CODE=0
 docker run --rm \
   --name nbank-test \
   --network nbank-network \
@@ -22,5 +25,12 @@ docker run --rm \
   -e UIREMOTE=http://selenoid:4444/wd/hub \
   -e DB_URL=jdbc:postgresql://postgres:5432/nbank \
   -e TEST_PROFILE="$TEST_PROFILE" \
-$IMAGE_NAME
-echo ">>> Tests finished. Reports - '$TEST_OUTPUT_DIR/reports'"
+$IMAGE_NAME || TEST_EXIT_CODE=$?
+
+if [ "$TEST_EXIT_CODE" -eq 0 ]; then
+  echo ">>> Tests passed. Reports - '$TEST_OUTPUT_DIR/reports'"
+else
+  echo ">>> Tests failed (exit code $TEST_EXIT_CODE). Logs - '$TEST_OUTPUT_DIR/logs', reports - '$TEST_OUTPUT_DIR/reports'"
+fi
+
+exit $TEST_EXIT_CODE
